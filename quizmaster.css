@@ -1,0 +1,47 @@
+/* Quizmaster specific styles */
+.customb {
+    width: 100px !important;
+}
+/* The countdown - hidden by default */
+.countdown {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  align-content: center;
+  border: 2px;
+  z-index: -1;
+	color: blue;
+	font-size: 12em
+}
+
+.gtitle {
+  align-content: center;
+	color: green;
+	font-family: Arial,Helvetica,sans-serif;
+	font-style: italic,bold;
+	font-size: 1.5em
+}
+
+.qheader {
+  align-content: center;
+	color: red;
+	font-family: Arial,Helvetica,sans-serif;
+	font-style: bold;
+	font-size: 2em
+}
+
+.qclass {
+  align-content: center;
+	color: black;
+	font-family: Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
+	font-style: bold;
+	font-size: 2em
+}
+
+.messages {
+  align-content: center;
+	color: blueviolet;
+	font-family: Arial,Helvetica,sans-serif;
+	font-style: bold;
+	font-size: 1.5em
+}

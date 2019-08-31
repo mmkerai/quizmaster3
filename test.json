@@ -1,0 +1,8 @@
+{"Category": "MOVIES", "Subcategory": "ACTORS", "Image": "actors/qm-actors-022.jpg", "Question": "Name this actor", "Difficulty": "MEDIUM", "Answer": "Ben Affleck", "Type": "Text"}
+{"Category": "GEOGRAPHY", "Subcategory": "GENERAL", "Image": "", "Question": "Worlds most remote weather station is located in what country?", "Difficulty": "HARD", "Answer": "Canada", "Type": "Text"}
+{"Category": "GEOGRAPHY", "Subcategory": "GENERAL", "Image": "", "Question": "What European country was in an official state of emergency from 1933 until 1945?", "Difficulty": "HARD", "Answer": "Germany", "Type": "Text"}
+{"Category": "ANIMALS", "Subcategory": "GENERAL", "Image": "", "Question": "An octopus has how many hearts?", "Difficulty": "HARD", "Answer": "3#1#2#6", "Type": "Multichoice"}
+{"Category": "MISC", "Subcategory": "GENERAL", "Image": "", "Question": "How many furlongs to a mile?", "Difficulty": "HARD", "Answer": "8#2#6#12", "Type": "Multichoice"}
+{"Category": "MISC", "Subcategory": "GENERAL", "Image": "", "Question": "Who told the American public in 1974 \"Our long national nightmare is over\"?", "Difficulty": "HARD", "Answer": "Gerald Ford", "Type": "Text"}
+{"Category": "TV", "Subcategory": "QUOTES", "Image": "", "Question": "Name the TV character: \"Eat my shorts\"", "Difficulty": "EASY", "Answer": "Bart Simpson", "Type": "Text"}
+{"Category": "MISC", "Subcategory": "MATHS", "Image": "", "Question": "What is 4 cubed?", "Difficulty": "EASY", "Answer": "64", "Type": "Number"}
