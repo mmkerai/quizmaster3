@@ -9,8 +9,6 @@ var bodyParser = require('body-parser');
 var app = require('express')();
 var	server = http.createServer(app);
 var	io = require('socket.io')(server);
-var fs = require('fs');
-const rln = require('readline');
 const db = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 const {OAuth2Client} = require('google-auth-library');
@@ -23,31 +21,19 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
+
 //********** set the port to use
 const PORT = process.env.PORT || 3000;
 server.listen(PORT);
 console.log("Dir path: "+__dirname);
 //*****Globals *************
-const GOOGLE_CLIENT_ID = "132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
-const SUPERADMIN = "thecodecentre@gmail.com";
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
 var QMSockets = new Object(); // keep list of socket ids for each quizmaster
-//const QFile = "test.json";
-const QFile = "QMQuestions.json";
-const STARTQID = 1971;
+
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 var NewCats = new Object();
-const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const IMAGEURL = "http://tropicalfruitandveg.com/quizmaster/";
-/*
 
-//****** Callbacks for all URL requests
-app.get('/', function(req, res){
-	res.sendFile(__dirname + '/index.html');
-});
-/*app.get('/index.js', function(req, res){
-	res.sendFile(__dirname + '/index.js');
-});*/
 app.get('/*', function(req, res){
 	res.sendFile(__dirname + req.path);
 });
@@ -126,57 +112,17 @@ io.on('connection',function(socket) {
     });
   });
 
-  socket.on('SignInSuperRequest',function() {
-    AUTHUSERS[socket.id] = true;
-    let qm = new Object();
-    qm['qmname'] = "TCC-Admin";
-    socket.emit("SignInSuperResponse",qm);
-  });
-
   socket.on('logoutRequest',function(token) {
     AUTHUSERS[socket.id] = false;
     console.log("Logged out: "+socket.id)
     autherror(socket,"Logged out");
   });
 
-	socket.on('loadQuestionsRequest',function(filename) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
-    const str = "Loading Questions to DB from file "+QFile;
-		console.log(str);
-    loadquestions(QFile,socket);
-		socket.emit('infoResponse',str);
-  });
-
-  socket.on('loadInMemRequest',function(filename) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
-    const str = "Loading Questions to Memory from file "+QFile;
-    console.log(str);
-    loadquestionstomem(QFile,socket);
-  });
-
-  socket.on('createQTableRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
-    console.log("Creating Question DB Table");
-	  dbt.createQTable(socket);
-  });
-
-  socket.on('createDBTablesRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
-		console.log("Creating DB Tables");
-    dbt.createDBTables(socket);
-  });
-
-  socket.on('createAppRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
-		console.log("Creating test app");
-    dbt.createTestApp(socket);
-  });
-
   socket.on('getCatsRequest',function(qmid){
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-//    console.log("Getting categories");
+    console.log("Getting categories");
     let qcat = qmt.getCategories();
-//    console.log("Categories are: "+qcat);
+    console.log("Categories are: "+qcat);
 		socket.emit('getCatsResponse',qcat);
   });
 
@@ -377,6 +323,7 @@ function removeSocket(id,evname) {
 function loadquestions(file,socket) {
 
     dbt.clearAllQuestions();
+    QIDLast = QIDSTART;    // reset question id
     var rd = rln.createInterface({
         input: fs.createReadStream(file),
         console: false
@@ -384,14 +331,19 @@ function loadquestions(file,socket) {
 
     rd.on('line', function(line) {
 //      collectCats(line);
-      let qobj = qmt.validatequestion(line);  // check that question have correct values
-      if(qobj != null)
+      let qobj = qmt.validatequestion(line,QIDLast);  // check that questions have correct values
+      if(qobj != null) {
         dbt.insertQuestion(qobj);
+        QIDLast++;       // increment last question id - ready for the next one
+      }
     });
 
     rd.on('close', function() {
-      dbt.getNumQuestionsByCat("",socket);
-      console.log(JSON.stringify(NewCats));
+      dbt.getNumQuestions(function(num) {
+        socket.emit('infoResponse',"Questions loaded: "+num);
+      });
+//      dbt.getNumQuestionsByCat("",socket);
+//      console.log(JSON.stringify(NewCats));
   });
 }
 
@@ -403,25 +355,6 @@ function autherror(socket,msg) {
 
 function setAuthUsers() {
 
-}
-
-function loadquestionstomem(file,socket) {
-
-  let qid = STARTQID;
-  qmt.clearAllQuestions();
-
-  var rd = rln.createInterface({
-      input: fs.createReadStream(file),
-      console: false
-  });
-
-  rd.on('line', function(line) {
-    let qmq = qmt.insertQuestion(line,qid++);
-  });
-
-  rd.on('close', function() {
-    socket.emit("infoResponse",qmt.getNumQuestions()+" questions loaded");
-  });
 }
 
 function collectCats(str) {

@@ -4,6 +4,19 @@ require('dotenv').config();
 
 const db = require('./DBfunctions.js');
 var Dbt = new db();
+class QMApp {
+  constructor(name,email,url,ip,hpwd) {
+    this.appname = name;
+    this.appemail = email;
+    this.appurl = url;
+    this.appsecret = "secret";
+    this.appip = ip;
+    this.password = hpwd;
+    this.regdate = new Date().getTime();
+    this.regusers = 0;
+    this.numrequests = 0;
+  }
+};
 
 class QMQuestion {
       constructor(Id,Category,Subcategory,Difficulty,Type,Question,Image,Answer) {
@@ -15,7 +28,21 @@ class QMQuestion {
           this.question = Question;
           this.difficulty = Difficulty;
           this.answer = Answer;
+          this.used = 0;
+          this.correct = 0;
       }
+};
+
+// This is used when registering a quizmaster
+class QMaster {
+  constructor(aid,qmid,name,email,hpwd) {
+      this.appid = aid;
+      this.qmid = qmid;
+      this.qmname = name;
+      this.email = email;    
+      this.password = hpwd;
+      this.games = [];    //all the games created by this QM
+  }
 };
 
 // This is used when a game starts
@@ -87,7 +114,6 @@ const QTYPE = {
 const GTYPE = {
     PUBQUIZ:'pubquiz',ONEQUIZ:'onequiz',FUNQUIZ:'funquiz'};
 
-var AllQuestions = new Object();    //list of all questions by question id
 var ActiveGames = new Object();    //list of all active games in play by id
 var AccessCodes = new Object();    //list of all accesscodes for active games
 var Contestants = new Object();    //list of all contestants for active games
@@ -124,6 +150,18 @@ QMQ.prototype.testAns = function() {
   console.log("Test9: "+checkAnswer(g1,"man"));
 }
 
+QMQ.prototype.createTestApp = function(socket) {
+  const myobj = new QMApp("testapp","thecodecentre@gmail.com","url.com","1.1.1.1","hashpwd");
+  Dbt.createApp(myobj,socket);
+}
+
+QMQ.prototype.createTestQM = function(socket,qmid) {
+  const myobj = new QMaster(12345,qmid,"quizmaster1","thecodecentre@gmail.com","12345678");
+  Dbt.createQMaster(myobj,function(name) {
+    socket.emit('infoResponse',"QMaster created: "+name);
+  });
+}
+
 QMQ.prototype.gameReady = function(game) {
   let newg = new QMGame(game);
   ActiveGames[game.gameid] = newg;    // add game to the list
@@ -157,60 +195,6 @@ QMQ.prototype.getActiveGame = function(gameid) {
   }
 }
 
-QMQ.prototype.clearAllQuestions = function() {
-  AllQuestions = new Object();
-}
-
-QMQ.prototype.insertQuestion = function(qstr,id) {
-  let obj = JSON.parse(qstr,'utf8');
-  let qm = new QMQuestion(id,
-                obj.Category.toUpperCase(),
-                obj.Subcategory.toUpperCase(),
-                obj.Difficulty.toUpperCase(),
-                obj.Type.toUpperCase(),
-                obj.Question,
-                obj.Image,
-                obj.Answer);
-
-  AllQuestions[id] = qm;
-  return qm;
-}
-
-QMQ.prototype.updateQuestion = function(obj) {
-  let qm = AllQuestions[obj.qid];
-  qm.category = obj.category;
-  qm.subcategory = obj.subcategory;
-  qm.type = obj.type;
-  qm.imageurl = obj.imageurl;
-  qm.question = obj.question;
-  qm.difficulty = obj.difficulty;
-  qm.answer = obj.answer;
-
-  AllQuestions[obj.qid] = qm;
-  return qm;
-}
-
-QMQ.prototype.getNumQuestions = function() {
-  return Object.keys(AllQuestions).length;
-}
-
-QMQ.prototype.getQuestionsByCat = function(cat) {
-  var catlist = new Array();
-  Object.keys(AllQuestions).forEach(key => {
-    if(AllQuestions[key].category == cat) {
-      catlist.push(AllQuestions[key]);
-    }
-  });
-  return catlist;
-}
-
-QMQ.prototype.getQuestionById = function(id) {
-  if(AllQuestions[id] != 'undefined')
-    return(AllQuestions[id]);
-
-  console.log(id+" question does not exist");
-}
-
 QMQ.prototype.getCategories = function() {
   return(QCAT);
 }
@@ -223,7 +207,7 @@ QMQ.prototype.getDifficulties = function() {
   return(QDIFF);
 }
 
-QMQ.prototype.getQTypes = function() {
+QMQ.prototype.getQuestionTypes = function() {
   return(QTYPE);
 }
 
@@ -238,42 +222,62 @@ QMQ.prototype.checkGameTypes = function(gtype) {
   return(false);
 }
 
-// check all values are valid and sanitise for inserting into database
-QMQ.prototype.validatequestion = function(jstr) {
+// check all values are valid and sanitise before inserting into database
+QMQ.prototype.validatequestion = function(jstr,qid) {
   let qobj = JSON.parse(jstr,'utf8');
-  let newq = new Object();
   let subcats = new Array();
-  let scexists = 0;
-  newq["Difficulty"] = qobj.Difficulty.toUpperCase();
-  newq["Type"] = qobj.Type.toUpperCase();
-  newq["Category"] = qobj.Category.toUpperCase();
-  newq["Subcategory"] = qobj.Subcategory.toUpperCase();
-  newq["Question"] = mysql_real_escape_string(qobj.Question);
-  newq["Image"] = qobj.Image;
-  newq["Answer"] = mysql_real_escape_string(qobj.Answer);
+  let cat = qobj.Category.toUpperCase();
+  let subcat = qobj.Subcategory.toUpperCase();
+  let type = qobj.Type.toUpperCase();
+  let difficulty = qobj.Difficulty.toUpperCase();
 
-    if(QDIFF[newq.Difficulty] == null) {
+    if(QDIFF[difficulty] == null) {
       console.log("Difficulty invalid: "+jstr);
       return null;
     }
-    if(QTYPE[newq.Type] == null) {
+    if(QTYPE[type] == null) {
       console.log("Question Type invalid: "+jstr);
       return null;
     }
-    if(QCAT[newq.Category] == null) {
+    if(QCAT[cat] == null) {
       console.log("Question Category invalid: "+jstr);
       return null;
     }
-    subcats = QCAT[newq.Category];
-    for(var i in subcats) {
-      if(subcats[i] == newq.Subcategory)
-        scexists = 1;
+    subcats = QCAT[cat];
+//    console.log("Cat and Subcats: "+cat+"-"+subcats);
+    for(const i of subcats) {
+      if(subcat == i) {
+//      console.log("valid Subcat:"+i+"-"+subcat);
+        return new QMQuestion(qid,cat,subcat,difficulty,type,
+          qobj.Question,qobj.Image,qobj.Answer);
+      }
     }
-    if(!scexists) {
-      console.log("Question SubCategory invalid: "+jstr);
+//  console.log("Question SubCategory invalid: "+jstr);
+    return null;
+}
+
+// check all values are valid before updating existing question
+QMQ.prototype.verifyquestion = function(qobj) {
+
+    if(QDIFF[qobj.difficulty] == null) {
+      console.log("Difficulty invalid: "+qobj.difficulty);
       return null;
     }
-    return newq;
+    if(QTYPE[qobj.type] == null) {
+      console.log("Question Type invalid: "+qobj.type);
+      return null;
+    }
+    if(QCAT[qobj.category] == null) {
+      console.log("Question Category invalid: "+qobj.category);
+      return null;
+    }
+    let subcats = QCAT[qobj.category];
+    for(const i of subcats) { // make sure subcat is in the list for this cat
+      if(i == qobj.subcategory) {
+        return qobj;
+      }
+    }
+    return null;
 }
 
 QMQ.prototype.getGameQuestions = function(game) {
@@ -395,34 +399,6 @@ function checkAnswer(game,ans) {
       return(Math.floor(points));
     }
   return(0);
-}
-
-function mysql_real_escape_string(str) {
-    if (typeof str != 'string')
-        return str;
-
-    return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, function (char) {
-        switch (char) {
-            case "\0":
-                return "\\0";
-            case "\x08":
-                return "\\b";
-            case "\x09":
-                return "\\t";
-            case "\x1a":
-                return "\\z";
-            case "\n":
-                return "\\n";
-            case "\r":
-                return "\\r";
-            case "\"":
-            case "'":
-            case "\\":
-            case "%":
-                return "\\"+char; // prepends a backslash to backslash, percent,
-                                  // and double/single quotes
-        }
-    });
 }
 
 //This is the damaerau levenshtein algo copied from dzone.com

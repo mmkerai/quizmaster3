@@ -7,7 +7,7 @@
 	<meta name="google-signin-scope" content="profile email">
 	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com">
 <!--	<script src="https://apis.google.com/js/platform.js?onload=initGSignin" async defer></script> -->
-	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<!-- <script src="https://apis.google.com/js/platform.js" async defer></script> -->
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="qedit.js"></script>
@@ -84,16 +84,13 @@
 				<button class="btn btn-primary" onclick="qsave()">Save</button>
 			</div>
 			<div class="col-xs-3">
-				<button class="btn btn-warning" onclick="qcancel()">Cancel</button>
-		  </div>
-			<div class="col-xs-2">
 				<button class="btn btn-info" onclick="nextq()">Next Question</button>
-		  </div>
-			<div class="col-xs-2">
+		  	</div>
+			<div class="col-xs-3">
 				<button class="btn btn-info" onclick="previousq()">Previous Question</button>
-		  </div>
+		  	</div>
 		</div>
-	</form>
+	</form>	
 	<p>&nbsp;</p>
 	<p>&nbsp;</p>
 	<p class="text-center" id="error"></p>

@@ -1,29 +1,43 @@
-// This file contains all DB Functions
-const mysql = require('mysql');
-const util = require('util');
+// This file contains all Mongo DB Functions
 require('dotenv').config();
-const QTable = "QMQuestion";
-const AppTable = "QMApp";
-const QMTable = "QMaster";
-const GameTable = "QMGame";
-const DBNAME = process.env.SQLDBName;
-var pool;
+const MongoClient = require('mongodb').MongoClient;
+const Questions = "QMQuestion";
+const Apps = "QMApp";
+const Qmasters = "QMaster";
+const CollQMGame = "QMGame";
+const DBNAME = process.env.MONGODBNAME;
+const URI = process.env.MONGOURI;
+var CollApps = 0;
+var CollQuestions = 0;
+var CollQmasters = 0;
 
 function DB() {
-    pool = mysql.createPool({
-    connectionLimit: 10,
-    //    socketPath: '/cloudsql/nodejs-mmk1:europe-west1:quizmaster-dev',
-    host: process.env.DBHost,
-    user: process.env.SQLUserName,
-    password: process.env.SQLPassword,
-    database: DBNAME
+  const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
+  client.connect(err => {
+    CollApps = client.db(DBNAME).collection(Apps);
+    CollQuestions = client.db(DBNAME).collection(Questions);
+    CollQmasters = client.db(DBNAME).collection(Qmasters);
   });
-
-pool.query = util.promisify(pool.query);
-console.log("DB Class initialised");
+  console.log("DB Class initialised");
 }
 
-DB.prototype.query = function(dbq,socket) {
+DB.prototype.createApp = function(appobj,socket) {
+  CollApps.insertOne(appobj, function(err, res) {
+    if (err) throw err;
+    console.log("Inserted into collection Apps:" +res);
+    socket.emit('infoResponse',"App created: "+appobj.appname);
+  });
+}
+
+DB.prototype.createQMaster = function(qmobj,callback) {
+  CollQmasters.insertOne(qmobj, function(err, res) {
+    if (err) throw err;
+    console.log("Inserted into collection Qmaster:" +res);
+    callback(res.ops[0].qmname);
+  });
+}
+
+/* DB.prototype.query = function(dbq,socket) {
   pool.query(dbq, function(err, results, fields) {
     if(err) {
       console.log("DB error: "+err.message);
@@ -34,186 +48,91 @@ DB.prototype.query = function(dbq,socket) {
       socket.emit('getQuestionsResponse',results);
     }
   });
+} */
+
+// Insert a new question (document) in the questions collection
+DB.prototype.insertQuestion = function(qobj) {
+  CollQuestions.insertOne(qobj, function(err, res) {
+    if (err) throw err;
+    console.log("1 question inserted:" +res.insertedId);
+  });
 }
 
-DB.prototype.createQTable = function(socket) {
-let createQTable = "create table if not exists QMQuestion(\
-                qid int primary key auto_increment,\
-                used int not null default 0,\
-                correct int not null default 0,\
-                category varchar(32) not null,\
-                subcategory varchar(32) not null,\
-                difficulty varchar(8) not null,\
-                type varchar(16) not null,\
-                question text not null,\
-                imageurl text not null,\
-                answer text not null) ENGINE = InnoDB AUTO_INCREMENT = 2171000";
-
-pool.query(createQTable, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("Question Table OK");
-    socket.emit('infoResponse',results);
-  }
-});
+// update a question (document) with same qid
+DB.prototype.updateQuestion = function(qobj,callback) {
+  CollQuestions.updateOne(
+    {qid: Number(qobj.qid)}, 
+    {$set: {
+        "category" : qobj.category,
+        "subcategory" : qobj.subcategory,
+        "type" : qobj.type,
+        "imageurl" : qobj.image,
+        "question" : qobj.question,
+        "difficulty" : qobj.difficulty,
+        "answer" : qobj.answer,
+        "used" : qobj.used,
+        "correct" : qobj.correct
+      }
+    },
+    function(err, res) {
+      if (err) throw err;
+      console.log("question updated:" +qobj.qid);
+      callback(qobj);
+  });
 }
 
-DB.prototype.createDBTables = function(socket) {
-let createAppTable = "create table if not exists QMApp(\
-                appid int primary key auto_increment,\
-                appname varchar(32) not null,\
-                appemail varchar(32) not null,\
-                appurl varchar(128) not null,\
-                appsecret varchar(32) not null,\
-                appipaddress varchar(16) not null,\
-                password varchar(64) not null,\
-                regdate datetime not null,\
-                regusers int not null default 0,\
-                numrequests int not null default 0) ENGINE = InnoDB AUTO_INCREMENT = 1171000";
-
-  pool.query(createAppTable, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("App Table OK");
-    socket.emit('infoResponse',results);
-  }
-});
-
-let createGameTable = "create table if not exists QMGame(\
-                gameid int primary key auto_increment,\
-                qmid int not null default 0,\
-                numquestions int not null default 0,\
-                timelimit int not null default 0,\
-                gamename varchar(32) not null,\
-                gametype varchar(8) not null,\
-                accesscode varchar(8) not null,\
-                questions text) ENGINE = InnoDB AUTO_INCREMENT = 3171000";
-
-pool.query(createGameTable, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("Game Table OK");
-    socket.emit('infoResponse',results);
-  }
-});
-
-let createQuizmasterTable = "create table if not exists QMaster(\
-                qmid int primary key auto_increment,\
-                appid int not null,\
-                qmname varchar(32) not null,\
-                qmemail varchar(32) not null,\
-                password varchar(64) not null,\
-                lastipaddress varchar(16) not null,\
-                lastlogin varchar(32) not null) ENGINE = InnoDB AUTO_INCREMENT = 4171000";
-
-pool.query(createQuizmasterTable, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("Quizmaster Table OK");
-    socket.emit('infoResponse',results);
-  }
-});
-
-let createContestantTable = "create table if not exists QMContestant(\
-                qmcid int primary key auto_increment,\
-                gameid int not null default 0,\
-                qmcname varchar(32) not null,\
-                qmcemail varchar(32) not null,\
-                accesscode varchar(32) not null,\
-                answers text,\
-                scores text) ENGINE = InnoDB AUTO_INCREMENT = 5171000";
-
-pool.query(createContestantTable, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("Contestant Table OK");
-    socket.emit('infoResponse',results);
-  }
-});
-
+// Gets total number of questions
+DB.prototype.getNumQuestions = function(method) {
+  CollQuestions.countDocuments({},function(err,result) {
+		if (err) throw err;
+    method(result);
+  });
 }
 
-DB.prototype.createTestApp = function(socket) {
-let testapp = "INSERT INTO "+DBNAME+"."+AppTable+" VALUES (0,\
-                'Quizmaster1',\
-                'thecodecentre@gmail.com',\
-                'url.com',\
-                'secret',\
-                '1.1.1.1',\
-                'hashedpwd',\
-                '2018-10-22 12:00:00',\
-                0,0)";
-
-pool.query(testapp, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-    console.log("Test App Quizmaster1 OK");
-    socket.emit('infoResponse',results);
-  }
-});
-
-}
-
-DB.prototype.insertQuestion = function(obj) {
-//  let obj = JSON.parse(qstr,'utf8');
-  let insq = "INSERT INTO "+DBNAME+"."+QTable+" VALUES (0,0,0,'"+
-              obj.Category+"','"+
-              obj.Subcategory+"','"+
-              obj.Difficulty+"','"+
-              obj.Type+"','"+
-              obj.Question+"','"+
-              obj.Image+"','"+
-              obj.Answer+"');";
-
-pool.query(insq, function(err, results, fields) {
-  if(err) {
-    console.log("DB error: "+err.message);
-  }
-  if(results) {
-//    console.log("Question inserted OK");
-  }
-});
-
-}
-
+// Gets number of question per category
+// Not sure why it is needed
 DB.prototype.getNumQuestionsByCat = function(cat,socket) {
-  let query = "SELECT COUNT(*) FROM "+QTable+" WHERE category='"+cat+"'";
-  pool.query(query, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-      socket.emit('errorMessage',"DB error: "+err.message);
-    }
-    if(results) {
-      console.log("DB Query getNumQuestions OK");
-      socket.emit('infoResponse',results);
-    }
+  CollQuestions.countDocuments({category: cat},function(err,result) {
+		if (err) throw err;
+    socket.emit('infoResponse',result);
   });
 }
 
+// Clear the questions collection
+// Used to load fresh questions - at start only
 DB.prototype.clearAllQuestions = function() {
-  let query = "TRUNCATE TABLE "+QTable;
-  pool.query(query, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results) {
-      console.log("DB QMQuestion Deleted OK");
-    }
+  CollQuestions.deleteMany({},function(err,result) {
+		if (err) throw err;
+    console.log("Collection QMQuestion Deleted OK");
+    });
+}
+
+// Gets quizmaster object based on his name
+DB.prototype.getQMByName = function(qname,callback) {
+  CollQmasters.find({qmname:qname}).toArray(function(err,result) {
+		if (err) console.log("QM not found: "+qname); 
+    console.log("QMaster found OK: "+result[0].qmname);
+    callback(result[0]);
+    });
+}
+
+DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,callback) {
+//  console.log("Getting question for "+cat+":"+subcat);
+  CollQuestions.find({category:cat,subcategory:subcat}).toArray(function(err,result) {
+		if (err) console.log("No questions for: "+cat+" & "+subcat); 
+    callback(result);
   });
 }
 
+DB.prototype.getQuestionById = function(id,callback) {
+  console.log("Getting question id "+id);
+  CollQuestions.find({qid:Number(id)}).toArray(function(err,result) {
+    if (err) console.log("No question with id: "+id);
+    // console.log("q "+id+" details: "+result);
+    callback(result[0]);
+  });
+}
+/*
 DB.prototype.getQMByEmail = function(obj,socket) {
   let checkqm = "SELECT * FROM "+DBNAME+"."+QMTable+" WHERE qmemail='"+obj.email+"'";
   pool.query(checkqm, function(err, results, fields) {
@@ -268,24 +187,6 @@ DB.prototype.createNewGame = function(obj,socket) {
     if(results) {
       console.log("New Game Created OK");
       socket.emit('newGameResponse',results);
-    }
-  });
-}
-
-DB.prototype.getQMByName = function(qname,callback) {
-  let checkqm = "SELECT * FROM "+DBNAME+"."+QMTable+" WHERE qmname='"+qname+"'";
-  pool.query(checkqm, function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-      return;
-    }
-    if(results.length > 0) {
-      console.log("Quizmaster Exists OK "+results[0].qmname);
-      callback(results[0]);
-    }
-    else {
-      console.log("QM does not exist: "+qname);
-      callback(results[0]);
     }
   });
 }
@@ -373,6 +274,7 @@ DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,socket) {
     }
   });
 }
+*/
 
 function generateAccesscode() {
   var length = 8,

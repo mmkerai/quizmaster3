@@ -157,16 +157,17 @@ socket.on('gameSetupErrorResponse',function(data) {
 	$('#setupgameerror').text(data);
 });
 
-socket.on('getCatsResponse',function(cats) {
+/* socket.on('getCatsResponse',function(cats) {
 	let items = Object.getOwnPropertyNames(cats);
 	console.log(items);
 	$('select[name="qcat"]').empty();
 	$('select[name="qsubcat"]').empty();
+	//First entry in dropdown
 	$('select[name="qcat"]').append($('<option>', {
 			value: "select",
 			text : "select a category"
 		}));
-
+	// subsequent entries in dropdown
 	$.each(items,function(i,item) {
     $('select[name="qcat"]').append($('<option>', {
         value: item,
@@ -174,37 +175,58 @@ socket.on('getCatsResponse',function(cats) {
     	}));
 		});
 	$('select[name="qcat"] option:selected').attr('disabled','disabled');
-});
+}); */
 
-socket.on('getSubcatsResponse',function(subcats) {
-	$('select[name="qsubcat"]').empty();
-	for(const item of subcats) {
-    $('select[name="qsubcat"]').append($('<option>', {
+socket.on('getCatsResponse',function(cats) {
+	let items = Object.getOwnPropertyNames(cats);
+	console.log(items);
+	$('#qcat').empty();
+	$('#qsubcat').empty();
+	//First entry in dropdown
+	$('#qcat').append($('<option>', {
+			value: "select",
+			text : "select a category"
+		}));
+	// subsequent entries in dropdown
+	$.each(items,function(i,item) {
+    	$('#qcat').append($('<option>', {
         value: item,
         text : item
     	}));
-		}
+	});
+	$('#qcat option:selected').attr('disabled','disabled');
+});
+
+socket.on('getSubcatsResponse',function(subcats) {
+	console.log(subcats);
+	$('#qsubcat').empty();
+	for(const item of subcats) {
+    	$('#qsubcat').append($('<option>', {
+        value: item,
+        text : item
+    	}));
+	}
 });
 
 socket.on('getDiffsResponse', function(diffs) {
 	$('#qdiff').empty();
 	let items = Object.getOwnPropertyNames(diffs);
 	$.each(items, function(i, item) {
-    $('#qdiff').append($('<option>', {
-        value: item,
-        text : item
-    }));
+    	$('#qdiff').append($('<option>', {
+			value: item,
+			text : item
+    	}));
 	});
 });
 
-socket.on('getTypesResponse', function(types) {
+socket.on('getQuestionTypesResponse', function(types) {
 	$('#qtype').empty();
 	let items = Object.getOwnPropertyNames(types);
 	$.each(items, function(i, item) {
-    $('#qtype').append($('<option>', {
-        value: item,
-        text : item
-    }));
+    	$('#qtype').append($('<option>', {
+			value: item,
+			text : item
+    	}));
 	});
 });
 
@@ -218,8 +240,8 @@ socket.on('endOfGame', function() {
 });
 
 function getquestions() {
-	const cat = $('select[name="qcat"] option:selected').val();
-	const subcat = $('select[name="qsubcat"] option:selected').val();
+	const cat = $('#qcat option:selected').val();
+	const subcat = $('#qsubcat option:selected').val();
 	console.log("Getting Questions with Category: "+cat+":"+subcat);
 	socket.emit('getQuestionsByCatandSubcat',QM.qmid,cat,subcat);
 }

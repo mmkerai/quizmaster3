@@ -1,40 +1,49 @@
-//const socket = io.connect();
-
 const qid = getURLParameter("qid");
 
 function updateq() {
 	socket.emit('getCatsRequest','');
-	socket.emit('getSubcatsRequest','');
+//	socket.emit('getSubcatsRequest',''); // dont fetch yet as will depend on the category
 	socket.emit('getDiffsRequest','');
-	socket.emit('getTypesRequest','');
+	socket.emit('getQuestionTypesRequest','');
 	socket.emit('getQuestionByIdRequest',qid);
 }
 
 $(document).ready(function() {
 	setDefaultValues();
+	$('#editq').submit(function(event) {
+		event.preventDefault();
+	});
+	socket.emit('SignInSuperRequest',"");
+});
+
+socket.on('SignInSuperResponse', function(name) {
+//	QM = name;
+	updateq();
 });
 
 socket.on('getQuestionByIdResponse',function(q) {
 
-console.log(q);
-$('#qid').val(q.qid);
-$('#qcat').val(q.category);
-$('#qsubcat').val(q.subcategory);
-$('#qdiff').val(q.difficulty);
-$('#qtype').val(q.type);
-$('#question').val(q.question);
-$('#answer').val(q.answer);
-	if(q.imageurl == '') {
-		$('#imurl').hide();
-		$('#qimage').hide();
-	}
-	else {
-		$('#imurl').show();
-		$('#qimage').show();
-		$('#imurl').val(q.imageurl);
-		let url = "http://tropicalfruitandveg.com/quizmaster/"+q.imageurl;
-		$('#qimage').attr('src',url);
-	}
+	console.log(q);
+	$('#qid').val(q.qid);
+	$('#qcat').val(q.category);
+	// The subcats will depend on the cats so get the specific subcats for this cat only
+	socket.emit("getSubcatsRequest",q.category);
+	$('#qsubcat').val(q.subcategory);
+	$('#qdiff').val(q.difficulty);
+	$('#qtype').val(q.type);
+	$('#question').val(q.question);
+	$('#answer').val(q.answer);
+		if(q.imageurl == '') {
+			$('#imurl').hide();
+			$('#qimage').hide();
+		}
+		else {
+			$('#imurl').show();
+			$('#qimage').show();
+			$('#imurl').val(q.imageurl);
+			let url = "https://tropicalfruitandveg.com/quizmaster/"+q.imageurl;
+			$('#qimage').attr('src',url);
+		}
 });
 
 socket.on('loginResponse', function(data) {
