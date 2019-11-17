@@ -9,6 +9,7 @@ $(document).ready(function() {
 	setDefaultValues();
 	$('#newgame').hide();
 	$('#qchoose').hide();
+	$table = $('#bstable');
 	checksignedin();
 	$('#qchooseform').submit(function(event) {
 		event.preventDefault();
@@ -53,6 +54,15 @@ function reviewq() {
 //	socket.emit('getDiffsRequest',QM.qmid);
 }
 
+function getqs() {
+	if(!QM)
+		return($('#error').text("You need to login first"));
+
+		console.log("Getting Questions");
+		$('#qtable').show();
+		socket.emit('getQuestionsRequest',QM.qmid);	
+}
+
 function newgame() {
 	if(!QM)
 		return($('#error').text("You need to login first"));
@@ -83,7 +93,6 @@ socket.on('loginResponse',function(qm) {
 	console.log("Login response: "+QM.qmid);
 	setPostLoginValues(QM);
 	socket.emit("getGamesRequest",QM.qmid);
-	$('#error').text("");
 });
 
 socket.on('registerQMResponse',function(qm) {
@@ -100,9 +109,9 @@ socket.on('getGamesResponse',function(glist) {
    		responsiveLayout:true,
 	    columns:[
 			{title:"Game Name", field:"gamename",width:300},
-	    {title:"Game Type", field:"gametype"},
+	    	{title:"Game Type", field:"gametype"},
 			{title:"Access Code", field:"accesscode"},
-	    {title:"No of Questions", field:"numquestions"},
+	    	{title:"No of Questions", field:"numquestions"},
 			{title:"Time Limit", field:"timelimit"}],
 			rowDblClick:function(e, row) {
 				console.log(row._row.data.gameid);
@@ -111,6 +120,7 @@ socket.on('getGamesResponse',function(glist) {
 	});
 });
 
+/*
 socket.on('getQuestionsResponse',function(qlist) {
 		var table = new Tabulator("#setqtable", {
 		    data: qlist,
@@ -128,6 +138,12 @@ socket.on('getQuestionsResponse',function(qlist) {
 					$('#qmgquestions').val(Questions);
 	  		},
 		});
+});
+*/
+// Bootstrap table
+socket.on('getQuestionsResponse', function(qlist) {
+	console.log(qlist);
+	$table.bootstrapTable({data: qlist});
 });
 
 socket.on('newGameResponse',function(data) {

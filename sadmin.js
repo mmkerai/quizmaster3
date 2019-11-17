@@ -5,7 +5,7 @@ $(document).ready(function() {
 	setDefaultValues();
 	signInSuper();
 	$table = $('#btable');
-	$select = $('#select')
+	$select = $('#select');
 	$('#reviewq').submit(function(event) {
 		event.preventDefault();
 	});
@@ -41,6 +41,15 @@ function reviewq() {
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
+function getqs() {
+	if(!QM)
+		return($('#error').text("You need to login first"));
+
+		console.log("Getting Questions");
+		$('#qtable').show();
+		socket.emit('getQuestionsRequest',QM.qmid);	
+}
+
 socket.on('createQTableResponse',function(data) {
 	$("#message1").text(data);
 });
@@ -53,33 +62,13 @@ socket.on('createAppResponse',function(data) {
 	$("#message1").text(data);
 });
 
-socket.on('SignInSuperResponse', function(name) {
+socket.on('SignInSuperResponse',function(name) {
 	QM = name;
 	setPostLoginValues(name);
 });
 
-// Tabulator table
-/* socket.on('getQuestionsResponse', function(qlist) {
-//	console.log(qlist);
-	var table = new Tabulator("#qtable", {
-	    data: qlist,
-	    columns:[
-	    {title:"Category", field:"category"},
-	    {title:"Subcategory", field:"subcategory"},
-	    {title:"Difficulty", field:"difficulty",widthGrow:2},
-	    {title:"Type", field:"type", align:"center"},
-	    {title:"Question", field:"question",width:320},
-	    {title:"Answer", field:"answer"},
-	 		{title:"Image", field:"imageurl"}],
-			rowDblClick:function(e, row) {
-				console.log(row._row.data.qid);
-				window.open("qedit.html?qid="+row._row.data.qid, '_blank');
-  			},
-	});
-}); */
-
 // Bootstrap table
-socket.on('getQuestionsResponse', function(qlist) {
+socket.on('getQuestionsResponse',function(qlist) {
 	$table.bootstrapTable({data: qlist});
 });
 

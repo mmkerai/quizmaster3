@@ -10,6 +10,7 @@ const URI = process.env.MONGOURI;
 var CollApps = 0;
 var CollQuestions = 0;
 var CollQmasters = 0;
+var CollGames = 0;
 
 function DB() {
   const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
@@ -17,6 +18,7 @@ function DB() {
     CollApps = client.db(DBNAME).collection(Apps);
     CollQuestions = client.db(DBNAME).collection(Questions);
     CollQmasters = client.db(DBNAME).collection(Qmasters);
+    CollGames = client.db(DBNAME).collection(CollQMGame);
   });
   console.log("DB Class initialised");
 }
@@ -36,19 +38,6 @@ DB.prototype.createQMaster = function(qmobj,callback) {
     callback(res.ops[0].qmname);
   });
 }
-
-/* DB.prototype.query = function(dbq,socket) {
-  pool.query(dbq, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-      socket.emit('errorMessage',"DB error: "+err.message);
-    }
-    if(results) {
-      console.log("DB Table OK");
-      socket.emit('getQuestionsResponse',results);
-    }
-  });
-} */
 
 // Insert a new question (document) in the questions collection
 DB.prototype.insertQuestion = function(qobj) {
@@ -109,13 +98,23 @@ DB.prototype.clearAllQuestions = function() {
 
 // Gets quizmaster object based on his name
 DB.prototype.getQMByName = function(qname,callback) {
-  CollQmasters.find({qmname:qname}).toArray(function(err,result) {
-		if (err) console.log("QM not found: "+qname); 
-    console.log("QMaster found OK: "+result[0].qmname);
-    callback(result[0]);
-    });
+  CollQmasters.find({"qmname": qname}).toArray(function(err,result) {
+    if(err) console.log("QM not found: "+qname);
+    if(typeof result != "undefined" && result.length > 0) {
+      console.log("QMaster found OK: "+result[0].qmname);
+      callback(result[0]);
+    }
+  });
 }
 
+DB.prototype.getQuestions = function(callback) {
+  //  console.log("Getting question");
+    CollQuestions.find({}).toArray(function(err,result) {
+      if (err) console.log("No questions"); 
+      callback(result);
+    });
+}
+  
 DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,callback) {
 //  console.log("Getting question for "+cat+":"+subcat);
   CollQuestions.find({category:cat,subcategory:subcat}).toArray(function(err,result) {
@@ -129,9 +128,19 @@ DB.prototype.getQuestionById = function(id,callback) {
   CollQuestions.find({qid:Number(id)}).toArray(function(err,result) {
     if (err) console.log("No question with id: "+id);
     // console.log("q "+id+" details: "+result);
-    callback(result[0]);
+    callback(result);
   });
 }
+
+DB.prototype.getGames = function(id,callback) {
+  console.log("Getting question id "+id);
+  CollGames.find({qmid:Number(id)}).toArray(function(err,result) {
+    if (err) console.log("No games for QM id: "+id);
+    // console.log("q "+id+" details: "+result);
+    callback(result);
+  });
+}
+
 /*
 DB.prototype.getQMByEmail = function(obj,socket) {
   let checkqm = "SELECT * FROM "+DBNAME+"."+QMTable+" WHERE qmemail='"+obj.email+"'";
@@ -188,17 +197,6 @@ DB.prototype.createNewGame = function(obj,socket) {
       console.log("New Game Created OK");
       socket.emit('newGameResponse',results);
     }
-  });
-}
-
-DB.prototype.getGames = function(qmid,callback) {
-  let checkqm = "SELECT * FROM "+DBNAME+"."+GameTable+" WHERE qmid='"+qmid+"'";
-  pool.query(checkqm, function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    else
-      callback(results);
   });
 }
 

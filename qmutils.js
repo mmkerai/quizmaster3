@@ -5,7 +5,7 @@ var socket = io('', {
     'reconnectionAttempts': 5
 });
 
-const version = "QM v0.3";
+const version = "QM v0.5";
 const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 //const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var googleUser;
@@ -27,20 +27,21 @@ function onSignIn(googleUser) {
 // This is only for testing without using Google login
 function signIn() {
 	let qmname = prompt("Quizmaster Name", "quizmaster1");
-	socket.emit('TestLoginRequest',qmname);
+	if(qmname)
+		socket.emit('TestLoginRequest',qmname);
 	clearMessages();
 }
 
 // This is only for testing without using Google login
 function checksignedin() {
-	QM = JSON.parse(localStorage.getItem("QM"));
-	if(QM)
+	QM = JSON.parse(sessionStorage.getItem("QM"));
+	if(QM.qmname)
 		socket.emit('TestLoginRequest',QM.qmname);
 	clearMessages();
 }
 
 function signOut() {
-	localStorage.removeItem('QM');
+	sessionStorage.removeItem('QM');
 //  var auth2 = gapi.auth2.getAuthInstance();
 //  auth2.signOut().then(function () {
 		socket.emit('logoutRequest',"");
@@ -74,7 +75,7 @@ function setDefaultValues() {
 }
 
 function setPostLoginValues(qm) {
-	localStorage.setItem("QM",JSON.stringify(qm));
+	sessionStorage.setItem("QM",JSON.stringify(qm));
 	$('#userbutton').text(qm.qmname);
 	$('#registerbutton').hide();
 	$('#signinbutton').hide();
@@ -86,7 +87,9 @@ function setPostLoginValues(qm) {
 	$('#regqm').hide();
 	$('#yourgames').show();
 	$('#gamestable').hide();
+	$('#qtable').hide();
 	$('#newgame').hide();
+	$('#error').text("");
 	console.log("User successfully signed in:"+qm.qmname);
 }
 
@@ -238,13 +241,6 @@ socket.on('endOfGame', function() {
 	$('#qheader').text("End of Game");
 	delCookie("quizmaster");
 });
-
-function getquestions() {
-	const cat = $('#qcat option:selected').val();
-	const subcat = $('#qsubcat option:selected').val();
-	console.log("Getting Questions with Category: "+cat+":"+subcat);
-	socket.emit('getQuestionsByCatandSubcat',QM.qmid,cat,subcat);
-}
 
 function readCookie(name)
 {

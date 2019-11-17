@@ -99,6 +99,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('TestLoginRequest',function(qmname) {
+    console.log("User trying to login: "+qmname);
     dbt.getQMByName(qmname,function(qm) {
       if(qm) {
         AUTHUSERS[socket.id] = qm.qmid;
@@ -145,6 +146,14 @@ io.on('connection',function(socket) {
 		socket.emit('getGameTypesResponse',qtype);
   });
 
+  socket.on('getQuestionsRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    console.log("Getting questions");
+    dbt.getQuestions(function(qlist) {
+      socket.emit('getQuestionsResponse',qlist);
+    });
+  });
+
   socket.on('getQuestionsByCatandSubcat',function(qmid,cat,subcat) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting questions for category: "+cat+":"+subcat);
@@ -176,7 +185,7 @@ io.on('connection',function(socket) {
       }
       else {
         console.log("No games for QM: "+qmid);
-        socket.emit('errorResponse',qmid);
+        socket.emit('errorResponse',"You have no games");
       }
     });
   });

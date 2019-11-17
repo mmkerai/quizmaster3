@@ -1,9 +1,8 @@
-/* Node.js test
+/* 
  * This is the admin app for main app. Has DB stuff
  */
 // Version 2.0
 var http = require('http');
-var https = require('https');
 var app = require('express')();
 var bodyParser = require('body-parser');
 var app = require('express')();
@@ -117,9 +116,11 @@ io.on('connection',function(socket) {
 
   // This is for proper login
   socket.on('SignInSuperRequest',function() {
-    AUTHUSERS[socket.id] = true;
+    AUTHUSERS[socket.id] = 314159;
     let qm = new Object();
     qm['qmname'] = "TCC-Admin";
+    qm['qmid'] = 314159;
+    console.log("Super signed in");
     socket.emit("SignInSuperResponse",qm);
   });
 
@@ -179,6 +180,14 @@ io.on('connection',function(socket) {
 		socket.emit('getGameTypesResponse',qtype);
   });
 
+  socket.on('getQuestionsRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    console.log("Getting questions");
+    dbt.getQuestions(function(qlist) {
+      socket.emit('getQuestionsResponse',qlist);
+    });
+  });
+
   socket.on('getQuestionsByCatandSubcat',function(qmid,cat,subcat) {
     if(AUTHUSERS[socket.id] != true) return(autherror(socket));
 //    console.log("Getting questions for category: "+cat+":"+subcat);
@@ -209,10 +218,10 @@ io.on('connection',function(socket) {
   });
 
 // get all questions for a game
-  socket.on('getQuestionsRequest',function(game) {
+  socket.on('getGameQuestionsRequest',function(game) {
     if(AUTHUSERS[socket.id] != game.qmid) return(autherror(socket));
     let qlist = qmt.getGameQuestions(game);
-      socket.emit('getQuestionsResponse',qlist);
+      socket.emit('getGameQuestionsResponse',qlist);
 //      console.log('qlist: '+JSON.stringify(qlist));
   });
 

@@ -21,6 +21,12 @@
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="sadmin.js"></script>
+	<script>
+		var filterCategory = {
+			somekey: 'Cat',
+			anotherkey: 'Cat2'
+			};
+	</script>
 </head>
 <body>
 	<div class="container theme-showcase" role="main">
@@ -59,39 +65,41 @@
 	<div id="qreview"></div></br>
 	Category<select id="qcat"></select>
 	SubCategory<select id="qsubcat"></select>
-	<button class="btn btn-warning" onClick='getquestions()'>Get Questions</button>
+	<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
 	<p>&nbsp;</p>
 	<button class="btn btn-warning" id='select'>Get selection</button>
 	</table>
 	</form>
-	<div id="qtable"></div>
-	<table
-		id="btable"
-		class="table table-striped"
-		data-toggle="btable"
-		data-height="360"
-		data-search="true"
-		data-show-refresh="true"
-		data-method="get"
-		data-pagination="true"
-		data-detail-view="true"
-		data-detail-view-by-click="true"
-		data-detail-view-icon="false"
-		data-click-to-select="true"
-		data-side-pagination="server">
-		<thead class="thead-light">
-		  <tr>
-			<th data-field="state" data-checkbox="true"></th>
-			<th data-field="category">Category</th>
-			<th data-field="subcategory">Subcategory</th>
-			<th data-field="difficulty">Difficulty</th>
-			<th data-field="type">Type</th>
-			<th data-field="question">Question</th>
-			<th data-field="answer">Answer</th>
-			<th data-field="imageurl">Image URL</th>
-		  </tr>
-		</thead>
-	</table>
+	<div id="qtable">
+		<table
+			id="btable"
+			class="table table-striped"
+			data-toggle="btable"
+			data-height="360"
+			data-search="false"
+			data-show-refresh="true"
+			data-filter-control="true"
+			data-method="get"
+			data-pagination="true"
+			data-detail-view="true"
+			data-detail-view-by-click="true"
+			data-detail-view-icon="false"
+			data-click-to-select="true"
+			data-side-pagination="server">
+			<thead class="thead-light">
+			<tr>
+				<th data-field="state" data-checkbox="true"></th>
+				<th data-field="category" data-sortable="true" data-filter-control="select" data-filter-data="var:filterCategory">Category</th>
+				<th data-field="subcategory" data-sortable="true" data-filter-control="select">Subcategory</th>
+				<th data-field="difficulty">Difficulty</th>
+				<th data-field="type">Type</th>
+				<th data-field="question">Question</th>
+				<th data-field="answer">Answer</th>
+				<th data-field="imageurl">Image URL</th>
+			</tr>
+			</thead>
+		</table>
+	</div>
 <p>&nbsp;</p>
 	<p class="text-center" id="error"></p>
 	<p class="text-center" id="message1"></p>
