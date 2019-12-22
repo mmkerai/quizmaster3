@@ -23,6 +23,7 @@ function signInSuper() {
 
 function loadq() {
 	console.log("Loading Questions");
+	$("#error").text("");
 	socket.emit('loadQuestionsRequest','');
 }
 
@@ -33,11 +34,13 @@ function createqm() {
 
 function createapp() {
 	console.log("Creating Test App");
+	$("#error").text("");
 	socket.emit('createTestAppRequest','test');
 }
 
 function reviewq() {
 	console.log("Reviewing Questions");
+	$("#error").text("");
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
@@ -46,19 +49,23 @@ function getqs() {
 		return($('#error').text("You need to login first"));
 
 		console.log("Getting Questions");
+		$("#error").text("");
 		$('#qtable').show();
 		socket.emit('getQuestionsRequest',QM.qmid);	
 }
 
 socket.on('createQTableResponse',function(data) {
+	$("#error").text("");
 	$("#message1").text(data);
 });
 
 socket.on('createDBTablesResponse',function(data) {
+	$("#error").text("");
 	$("#message1").text(data);
 });
 
 socket.on('createAppResponse',function(data) {
+	$("#error").text("");
 	$("#message1").text(data);
 });
 
