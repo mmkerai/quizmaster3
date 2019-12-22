@@ -1,9 +1,8 @@
-/* Node.js test
+/* 
  * This is the admin app for main app. Has DB stuff
  */
 // Version 2.0
 var http = require('http');
-var https = require('https');
 var app = require('express')();
 var bodyParser = require('body-parser');
 var app = require('express')();
@@ -11,12 +10,13 @@ var	server = http.createServer(app);
 var	io = require('socket.io')(server);
 var fs = require('fs');
 const rln = require('readline');
-const db = require('./DBfunctions.js');
-const qm = require('./QMfunctions.js');
+const dbf = require('./DBfunctions.js');
+const qmf = require('./QMfunctions.js');
 const {OAuth2Client} = require('google-auth-library');
 //require('@google-cloud/debug-agent').start();
-var dbt = new db();
-var qmt = new qm();
+var dbt = new dbf();
+var qmt = new qmf();
+var qm = new Object();
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -110,16 +110,16 @@ io.on('connection',function(socket) {
   */
   socket.on('loginRequest',function() {
     AUTHUSERS[socket.id] = true;
-    let qm = new Object();
     qm['qmname'] = "TCC-Admin";
     socket.emit("SignInSuperResponse",qm);
   });
 
   // This is for proper login
   socket.on('SignInSuperRequest',function() {
-    AUTHUSERS[socket.id] = true;
-    let qm = new Object();
+    AUTHUSERS[socket.id] = 314159;
     qm['qmname'] = "TCC-Admin";
+    qm['qmid'] = 314159;
+    console.log("Super signed in");
     socket.emit("SignInSuperResponse",qm);
   });
 
@@ -130,7 +130,7 @@ io.on('connection',function(socket) {
   });
 
 	socket.on('loadQuestionsRequest',function(filename) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
     const str = "Loading Questions to DB from file "+QFile;
 		console.log(str);
     loadquestions(QFile,socket);
@@ -138,17 +138,17 @@ io.on('connection',function(socket) {
   });
 
   socket.on('createTestQMasterRequest',function(filename){
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
     qmt.createTestQM(socket,QMIDLast++);
   });
 
   socket.on('createTestAppRequest',function() {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
     qmt.createTestApp(socket);
   });
 
   socket.on('getCatsRequest',function(qmid) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
     console.log("Getting categories");
     let qcat = qmt.getCategories();
 //    console.log("Categories are: "+qcat);
@@ -156,7 +156,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getSubcatsRequest',function(cat) {
-    if(AUTHUSERS[socket.id] != true) return(autherror(socket));
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
     let qsubcat = qmt.getSubCategories(cat);
 		socket.emit('getSubcatsResponse',qsubcat);
   });
@@ -177,6 +177,14 @@ io.on('connection',function(socket) {
     if(AUTHUSERS[socket.id] != true) return(autherror(socket));
     let qtype = qmt.getGameTypes();
 		socket.emit('getGameTypesResponse',qtype);
+  });
+
+  socket.on('getQuestionsRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qm.qmid) return(autherror(socket));
+    console.log("Getting questions");
+    dbt.getQuestions(function(qlist) {
+      socket.emit('getQuestionsResponse',qlist);
+    });
   });
 
   socket.on('getQuestionsByCatandSubcat',function(qmid,cat,subcat) {
@@ -209,10 +217,10 @@ io.on('connection',function(socket) {
   });
 
 // get all questions for a game
-  socket.on('getQuestionsRequest',function(game) {
+  socket.on('getGameQuestionsRequest',function(game) {
     if(AUTHUSERS[socket.id] != game.qmid) return(autherror(socket));
     let qlist = qmt.getGameQuestions(game);
-      socket.emit('getQuestionsResponse',qlist);
+      socket.emit('getGameQuestionsResponse',qlist);
 //      console.log('qlist: '+JSON.stringify(qlist));
   });
 
