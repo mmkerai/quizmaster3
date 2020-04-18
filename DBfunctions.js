@@ -31,11 +31,22 @@ DB.prototype.createApp = function(appobj,socket) {
   });
 }
 
-DB.prototype.createQMaster = function(qmobj,callback) {
+DB.prototype.newQMaster = function(qmobj,callback) {
   CollQmasters.insertOne(qmobj, function(err, res) {
     if (err) throw err;
     console.log("Inserted into collection Qmaster:" +res);
-    callback(res.ops[0].qmname);
+    callback(true);
+  });
+}
+
+// check if the QMaster exist based on his id.
+DB.prototype.checkQMaster = function(uid,callback) {
+  CollQmasters.find({qmid: uid}).toArray(function(err,result) {
+    if (err) throw err;
+    if(result.length)
+      callback(true);
+    else
+      callback(false);
   });
 }
 

@@ -3,30 +3,34 @@
  */
 // Version 2.0
 var http = require('http');
-var https = require('https');
-var app = require('express')();
 var bodyParser = require('body-parser');
 var app = require('express')();
 var	server = http.createServer(app);
 var	io = require('socket.io')(server);
-const db = require('./DBfunctions.js');
-const qm = require('./QMfunctions.js');
 const {OAuth2Client} = require('google-auth-library');
-//require('@google-cloud/debug-agent').start();
-var dbt = new db();
-var qmt = new qm();
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
+const db = require('./DBfunctions.js');
+const qm = require('./QMfunctions.js');
+//require('@google-cloud/debug-agent').start();
+var dbt = new db();
+var qmt = new qm();
 
 //********** set the port to use
 const PORT = process.env.PORT || 3000;
 server.listen(PORT);
 console.log("Dir path: "+__dirname);
 //*****Globals *************
+//const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
+const GOOGLE_CLIENT_SECRET = "xx";
+const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
+//const SUPERADMIN = "thecodecentre@gmail.com";
+const SUPERADMIN = "103301973641709867567"; //google id for thecodecentre@gmail.com
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
 var QMSockets = new Object(); // keep list of socket ids for each quizmaster
 
@@ -48,6 +52,7 @@ console.log("Server started on port "+PORT);
 
 // Set up socket actions and responses
 io.on('connection',function(socket) {
+  AUTHUSERS[socket.id] = 999;   // initialise with a number
 
   socket.on('disconnect',function () {
     removeSocket(socket.id,"disconnect");
@@ -60,70 +65,103 @@ io.on('connection',function(socket) {
   socket.on('connect_timeout', function() {
     removeSocket(socket.id,"timeout");
   });
-/*
+
+  // only used by super admin. Hard coded to tcc
+  socket.on('loginSuperRequest',function(token) {
+    async function verify() {
+      const ticket = await oauthclient.verifyIdToken({
+          idToken: token,
+          audience: GOOGLE_CLIENT_ID
+      });
+      const payload = ticket.getPayload();
+//      console.log(payload);
+      var user;
+      if(payload.sub == SUPERADMIN) {
+          console.log("Super admin logged in");
+          AUTHUSERS[socket.id] = payload.sub;
+          user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
+        }
+        else {
+          user = null;
+          console.log("Super admin login error");
+        }
+        socket.emit('loginSuperResponse',user);
+    }
+    verify().catch(console.error);
+  });
+
+  socket.on('registerRequest',function(token) {
+    async function verify() {
+      const ticket = await oauthclient.verifyIdToken({
+          idToken: token,
+          audience: GOOGLE_CLIENT_ID
+      });
+      const payload = ticket.getPayload();
+//        console.log(payload);
+      var user;
+      dbt.checkQMaster(payload.sub,function(exists) {
+        if(exists) {  // user already in the DB
+          socket.emit('registerResponse',null);
+        }
+        else { // not in DB so add it
+          var newQM = new qmt.createQMaster(payload);
+          dbt.newQMaster(newQM,function(valid) {
+            if(valid) {
+              AUTHUSERS[socket.id] = payload.sub;
+              user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
+            }
+            else {
+              user = null;
+            }
+            socket.emit('registerResponse',user);
+          });
+       }
+     });
+    }
+    verify().catch(console.error);
+  });
+
   socket.on('loginRequest',function(token) {
     async function verify() {
       const ticket = await oauthclient.verifyIdToken({
           idToken: token,
-          audience: GOOGLE_CLIENT_ID,
+          audience: GOOGLE_CLIENT_ID
       });
       const payload = ticket.getPayload();
-      console.log("sub is "+payload['sub']);
 //      console.log(payload);
-//      if(SUPERADMIN == payload['email']) {
-//        console.log("Superadmin signed in: "+socket.id);
-          dbt.getQMByEmail(payload,socket);
-//        AUTHUSERS[socket.id] = obj.email;
-//          socket.emit('loginResponse',payload.name);
-      }
-//        else
-//          socket.emit('errorResponse',"Login failed, please register");
-/*      }
-      else {
-        AUTHUSERS[socket.id] = false;
-        autherror(socket);
-      }
+      var user;
+      dbt.checkQMaster(payload.sub,function(valid) {
+        if(valid) {
+          AUTHUSERS[socket.id] = payload.sub;
+          user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
+       }
+       else {
+         user = null;
+       }
+        socket.emit('loginResponse',user);
+      });
+    }
     verify().catch(console.error);
   });
-*/
 
-  socket.on('registerQMRequest',function(newqm) {
-    dbt.createNewQM(newqm,socket);
-  });
-
-  /*
-  * This is for localhost testing without authentication
-  */
-  socket.on('loginRequest',function() {
-    AUTHUSERS[socket.id] = true;
-  });
-
-  socket.on('TestLoginRequest',function(qmname) {
-    console.log("User trying to login: "+qmname);
-    dbt.getQMByName(qmname,function(qm) {
-      if(qm) {
-        AUTHUSERS[socket.id] = qm.qmid;
-        console.log("Test Logged in: "+socket.id);
-        QMSockets[qm.qmid] = socket.id;
-        socket.emit('loginResponse',qm);
-      }
-      else {
-        socket.emit('errorResponse',"Login failed: "+qmname);
-      }
-    });
-  });
-
-  socket.on('logoutRequest',function(token) {
-    AUTHUSERS[socket.id] = false;
+  socket.on('logoutRequest',function() {
+    AUTHUSERS[socket.id] = 0;
     console.log("Logged out: "+socket.id)
     autherror(socket,"Logged out");
   });
 
+  socket.on('getUserInfoRequest',function(uid) {
+    if(AUTHUSERS[socket.id] != uid) return(autherror(socket));
+    dbt.getUserInfo(uid,function(uinfo) {
+      socket.emit('getUserInfoResponse',uinfo);
+    });
+  });    
+
   socket.on('getCatsRequest',function(qmid){
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    console.log("Getting categories");
+ //   console.log("getCatsRequest QM ID: "+qmid);
     let qcat = qmt.getCategories();
-    console.log("Categories are: "+qcat);
+ //   console.log("Categories are: "+JSON.stringify(qcat));
 		socket.emit('getCatsResponse',qcat);
   });
 
@@ -312,12 +350,12 @@ io.on('connection',function(socket) {
   });
 
 // get all questions for a game
-  socket.on('getQuestionsRequest',function(game) {
+ /*  socket.on('getQuestionsRequest',function(game) {
     if(AUTHUSERS[socket.id] != game.qmid) return(autherror(socket));
     let qlist = qmt.getGameQuestions(game);
       socket.emit('getQuestionsResponse',qlist);
 //      console.log('qlist: '+JSON.stringify(qlist));
-  });
+  }); */
 
 }); //end of io.on
 
@@ -360,10 +398,6 @@ function autherror(socket,msg) {
   if(!msg)
     msg = "Please login as admin";
   socket.emit("errorResponse",msg);
-}
-
-function setAuthUsers() {
-
 }
 
 function collectCats(str) {

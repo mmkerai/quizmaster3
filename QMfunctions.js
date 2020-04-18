@@ -33,15 +33,19 @@ class QMQuestion {
       }
 };
 
-// This is used when registering a quizmaster
+// This is used when registering a quizmaster using Google ID
 class QMaster {
-  constructor(aid,qmid,name,email,hpwd) {
-      this.appid = aid;
-      this.qmid = qmid;
-      this.qmname = name;
-      this.email = email;    
-      this.password = hpwd;
-      this.games = [];    //all the games created by this QM
+  constructor(user,ip) {
+    this.name = user.name;
+    this.email = user.email;
+    this.qmid = user.sub;
+    this.app_id = user.jti;
+    this.app_ip = ip;
+    this.api_key = user.at_hash;
+    this.api_requests = 0;
+    this.reg_date = new Date().getTime();
+    this.reg_users = 0;
+    this.games = [];    //all the games created by this QM
   }
 };
 
@@ -155,11 +159,9 @@ QMQ.prototype.createTestApp = function(socket) {
   Dbt.createApp(myobj,socket);
 }
 
-QMQ.prototype.createTestQM = function(socket,qmid) {
-  const myobj = new QMaster(12345,qmid,"quizmaster1","thecodecentre@gmail.com","12345678");
-  Dbt.createQMaster(myobj,function(name) {
-    socket.emit('infoResponse',"QMaster created: "+name);
-  });
+QMQ.prototype.createQMaster = function(qm) {
+  const myobj = new QMaster(qm,"1.1.1.1");  // needs qm info plus ip address
+  return myobj;
 }
 
 QMQ.prototype.gameReady = function(game) {

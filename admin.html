@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>Quizmaster Admin</title>
-<!--	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 	<link href="https://unpkg.com/bootstrap-table@1.15.4/dist/bootstrap-table.min.css" rel="stylesheet">
 	<script src="https://unpkg.com/bootstrap-table@1.15.4/dist/bootstrap-table.min.js"></script>
-	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script>-->
-	<script type="text/javascript" src="jquery-2.1.3.min.js"></script>
-	<link rel="stylesheet" href="bootstrap.min.css"/>
-	<link rel="stylesheet" href="bootstrap-table.min.css"/>
-	<script type="text/javascript" src="bootstrap-table.min.js"></script>
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com">
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="admin.js"></script>
@@ -23,45 +22,28 @@
 			<h3>Quizmaster Admin</h3>
 			<h4>Admin for quizmaster</h4>
 			<h5><span id="version" class="pull-left"></span></h5>
-			<span class="pull-right">
-				<button class="btn btn-info" id="userbutton"></button>
+			<div class="pull-right">
+				<img id="userimg" width="40" height="40"/>&nbsp;<b><span id="username"></span></b>
 				<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign out</button>
-			</span>
+			</div>
 			<p>&nbsp;</p>
 		</div>
 		<div class="col-xs-12">
-			<div class="col-xs-2">
-				<button class="btn btn-info" id="signinbutton" onclick="signIn()">Sign In</button>
+			<div class="col-xs-3">
+				<span id="signinbutton" class="g-signin2" data-width="200" data-height="40" data-longtitle="true" data-onsuccess="onSignIn" data-theme="dark"></span>
 			</div>
 			<div class="col-xs-2">
-				<button class="btn btn-primary" id="registerbutton" onclick="register()">Register using Google Id</button>
+				<button id="registerlabel" class="btn btn-primary" onclick="register()">Register</button>
 			</div>
+		</div>
+<!-- 		<div id="qadmin" class="col-xs-12">
 			<div class="col-xs-2">
 				<button class="btn btn-primary" onclick="reviewqmg()">Review Games</button>
-  		</div>
+  			</div>
 			<div class="col-xs-2">
 				<button class="btn btn-primary" onclick="reviewq()">Review questions</button>
-  		</div>
-		</div>
-		<div id="regqm">
-		<form id="regqmform">
-			<div class="form-group">
-				<label>Your ID:</label>
-				<input class="form-control" type="text" id="qmsubid"/>
-			</div>
-			<div class="form-group">
-				<label>Your Name:</label>
-				<input class="form-control" type="text" id="qmname"/>
-			</div>
-			<div class="form-group">
-				<label>Your Email:</label>
-				<input class="form-control" type="text" id="qmemail"/>
-			</div>
-			<div class="form-group">
-			<button class="btn btn-success" onClick="regNewQM()">Register</button>
-			</div>
-		</form>
-		</div>
+  			</div>
+		</div> -->
 	<p>&nbsp;</p>
 	<p id="yourgames">Your Games&nbsp;<img src="images/plus.png" width="32" height="32" onclick="newgame()"/></p>
 	<div id="gamestable">
@@ -69,16 +51,16 @@
 	</div>
 	<div id="newgame">
 		<div class="form-horizontal col-xs-9 col-xs-offset-3">
-		<div class="form-group">
-			<label class="control-label col-xs-3">Game or event name</label>
-			<div class="col-xs-3">
-				<input class="form-control" type="text" id="qmgname"/>
+			<div class="form-group">
+				<label class="control-label col-xs-3">Game or event name</label>
+				<div class="col-xs-3">
+					<input class="form-control" type="text" id="qmgname"/>
+				</div>
 			</div>
-		</div>
 		<div class="form-group">
 			<label class="control-label col-xs-3">Game type</label>
 			<div class="col-xs-3">
-				<select class="form-control" id="qmgtype"/>
+				<select class="form-control" id="qmgtype">
 				<option value="FUNQUIZ">Funquiz</option>
 				<option value="PUBQUIZ">Pubquiz</option>
 				<option value="ONEQUIZ">Onequiz</option>
@@ -112,23 +94,28 @@
 			</div>
 			<div class="messages" id="setupgameerror"></div>
 		</div>
-		<div id="qchoose">
-			<form id="qchooseform">
-			<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
-			<p>&nbsp;</p>
-			</form>
-		</div>
+	</div>
+	<div id="qselect">
+		<form id="qselectform" class="inputform">
+		Category<select id="qcat"></select>
+		SubCategory<select id="qsubcat"></select>
+		<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
+		<p>&nbsp;</p>
+		<button class="btn btn-warning" id='myselect'>Get selection</button>
+		</form>
+	</div>
 	</div>
 	<div id="qtable">
 		<table
-			id="bstable"
+			id="btable"
 			class="table table-striped"
 			data-toggle="btable"
 			data-height="360"
-			data-search="true"
+			data-search="false"
 			data-show-refresh="true"
+			data-filter-control="true"
 			data-method="get"
-			data-pagination="true"
+			data-pagination="false"
 			data-detail-view="true"
 			data-detail-view-by-click="true"
 			data-detail-view-icon="false"
@@ -137,8 +124,8 @@
 			<thead class="thead-light">
 			<tr>
 				<th data-field="state" data-checkbox="true"></th>
-				<th data-field="category">Category</th>
-				<th data-field="subcategory">Subcategory</th>
+				<th data-field="category" data-sortable="true" data-filter-control="select" data-filter-data="var:filterCategory">Category</th>
+				<th data-field="subcategory" data-sortable="true" data-filter-control="select">Subcategory</th>
 				<th data-field="difficulty">Difficulty</th>
 				<th data-field="type">Type</th>
 				<th data-field="question">Question</th>
