@@ -2,14 +2,15 @@
 <html>
 <head>
 	<title>Quizmaster</title>
-<!--  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/> -->
-<!--	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script>-->
-	<script type="text/javascript" src="jquery-2.1.3.min.js"></script>
-	<link rel="stylesheet" href="bootstrap.min.css"/>
-	<script type="text/javascript" src="tabulator.min.js"></script>
-	<link rel="stylesheet" href="tabulator.min.css"/>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+	<script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+	<!-- <script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com"> -->
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="index.js"></script>
@@ -21,22 +22,25 @@
 	<div class="well">
 		<h3>Quizmaster</h3>
 		<h5><span id="version" class="pull-left"></span></h5>
-		<span class="pull-right">
-			<button class="btn btn-info" id="userbutton"></button>
-			<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign out</button>
-		</span>
+		<div class="pull-right">
+			<button class="btn btn-info" id="username"></button>
+			<button class="btn btn-warning" id="leave" onclick="cleave()">Signout</button>
+		</div>
 		<p>&nbsp;</p>
 	</div>
+	<p class="messages" id="error"></p>
+	<p class="messages" id="message1"></p>
+	<p class="gtitle" id='gameheader'></p>
 	<div id='menu' class="col-xs-12">
 		<div class="col-xs-2">
 <!--			<button type="button" class="btn btn-info" data-toggle="collapse" data-target="#joingamex" id="joingamebutton">Join Game</button>-->
-			<button type="button" class="btn btn-info" onClick="doJoin()">Join Game</button>
+			<button type="button" class="btn btn-info" onClick="doJoin()">Join a Game</button>
 		</div>
 		<div class="col-xs-2">
-			<button class="btn btn-info" id="signinbutton" onclick="location.href='admin.html';">Sign In</button>
+			<button class="btn btn-info" onclick="location.href='admin.html';">Quizmaster Sign In</button>
 		</div>
 		<div class="col-xs-2">
-			<button class="btn btn-primary" id="registerbutton" onclick="location.href='admin.html';">Register</button>
+			<button class="btn btn-primary" onclick="location.href='register.html';">Register</button>
 		</div>
 	</div>
 	<div id="joingamex" class="collapse">
@@ -55,38 +59,34 @@
 		</div>
 	</form>
 	</div>
-	<div id="gameheader" class="gtitle"></div>
-	<div id="qheader" class="qheader"></div>
-	<div id="question" class="qclass"></div>
-	<p>&nbsp;</p>
-	<form id="ansform">
-	<div id="qaform" class="form-group">
-		<div class="col-xs-5">
-	  	<input type="text" class="form-control" id="qanswer" placeholder="Your Answer"/>
-		</div>
-		<div id="sbutton" class="col-xs-2">
-	    <button class="btn btn-danger" onclick="submitanswer()" type="submit">Submit</button>
-	  </div>
-	</div>
-	</form>
-	<div class="col-xs-8">
-		<div id="mchoice" class="btn-group">
-			<button id="mchoice1" type="button" class="btn btn-primary customb" onclick="mcanswer(0)"></button>
-			<button id="mchoice2" type="button" class="btn btn-success customb" onclick="mcanswer(1)"></button>
-			<button id="mchoice3" type="button" class="btn btn-warning customb" onclick="mcanswer(2)"></button>
-			<button id="mchoice4" type="button" class="btn btn-danger customb" onclick="mcanswer(3)"></button>
-		</div>
-	</div>
-	<div class="col-xs-12">
+	<div id="play">
+		<p class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></p>
+		<p class="qheader" id="qheader"></p>
+		<p class="qclass" id="question"></p>
+		<div class="countdown" id="timer"></div>
 		<p><img id='qimage'></p>
+		<p>&nbsp;</p>
+		<div id="qaform" class="form-group">
+			<form id="ansform">
+			<div class="col-xs-5">
+				<input type="text" class="form-control" id="qanswer" placeholder="Your Answer"/>
+			</div>
+			<div id="sbutton" class="col-xs-2">
+				<button class="btn btn-danger" onclick="submitanswer()" type="submit">Submit</button>
+			</div>
+			</form>
+		</div>
+		<div id="mchoice" class="col-xs-8">
+			<div class="btn-group">
+				<button id="mchoice1" type="button" class="btn btn-primary customb" onclick="mcanswer(0)"></button>
+				<button id="mchoice2" type="button" class="btn btn-success customb" onclick="mcanswer(1)"></button>
+				<button id="mchoice3" type="button" class="btn btn-warning customb" onclick="mcanswer(2)"></button>
+				<button id="mchoice4" type="button" class="btn btn-danger customb" onclick="mcanswer(3)"></button>
+			</div>
+		</div>
 		<p id="canswer" class="qheader"></p>
-		<p class="messages" id="error"></p>
-		<p class="messages" id="message1"></p>
 	</div>
 	<div id='scores'></div>
-	<div class='countdown' id='counter'></div>
-	<p>&nbsp;</p>
-	<p class="messages" id="message2"></p>
 </div>
 </body>
 </html>

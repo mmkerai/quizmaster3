@@ -11,11 +11,6 @@ $(document).ready(function() {
 	$('#reviewq').submit(function(event) {
 		event.preventDefault();
 	});
-	$('#qcat').change(function() {
-      let cat = $('#qcat option:selected').val();
-			console.log("selected option: "+cat);
-			socket.emit("getSubcatsRequest",QM.qmid,cat);
-	});
 });
 
 $(function() {
@@ -23,16 +18,6 @@ $(function() {
       alert('getSelections: ' + JSON.stringify($table.bootstrapTable('getSelections')))
 	});
 });
-
-function onSignInSuper(googleUser) {
-	var profile = googleUser.getBasicProfile();
-	console.log("ID: " + profile.getId()); // Don't send this directly to your server!
-	console.log('Logged in: ' + profile.getName());
-	var id_token = googleUser.getAuthResponse().id_token;
-//	console.log("ID Token: " + id_token);
-	socket.emit('loginSuperRequest',id_token);	// this is for super admin only
-	clearMessages();
-}
 
 function loadq() {
 	console.log("Loading Questions");
@@ -47,7 +32,7 @@ function reviewq() {
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
-/* function getqs() {
+function getqs() {
 	if(!QM)	return($('#error').text("You need to login first"));
 
 	console.log("Getting Questions");
@@ -55,25 +40,6 @@ function reviewq() {
 	$('#qtable').show();
 	socket.emit('getQuestionsRequest',QM.qmid);	
 }
- */
-socket.on('loginSuperResponse', function(userinfo) {
-	if(userinfo) {
-		QM = userinfo;	// save the user info
-		$('#username').text(userinfo.name);
-		$('#userimg').attr("src",userinfo.imageUrl);
-		$('#signinbutton').hide();
-		$('#signoutbutton').show();
-		$('#username').show();
-		$('#userimg').show();
-		$("#error").text("");
-		$('#registerlabel').hide();
-		$('#registerbutton').hide();
-		console.log("Super successfully signed in: "+JSON.stringify(userinfo));
-	}
-	else {
-		$("#error").text("Login not valid");
-	}
-});
 
 function setDefaultValues() {
 	$('#version').text(version);

@@ -4,24 +4,25 @@
 }
 /* The countdown - hidden by default */
 .countdown {
-  display: none;
   position: fixed;
   bottom: 0;
-  align-content: center;
+  text-align: center;
   border: 2px;
-  z-index: -1;
+  z-index: 10;
 	color: blue;
 	font-size: 12em
 }
 
+/* game title */
 .gtitle {
-  align-content: center;
+	text-align: center;
 	color: green;
 	font-family: Arial,Helvetica,sans-serif;
 	font-style: italic,bold;
-	font-size: 1.5em
+	font-size: 2em
 }
 
+/* question header style */
 .qheader {
   align-content: center;
 	color: red;
@@ -30,6 +31,7 @@
 	font-size: 2em
 }
 
+/* actual question */
 .qclass {
   align-content: center;
 	color: black;
@@ -39,9 +41,9 @@
 }
 
 .messages {
-  align-content: center;
+	align-content: center;
 	color: blueviolet;
 	font-family: Arial,Helvetica,sans-serif;
 	font-style: bold;
-	font-size: 1.5em
+	font-size: 1.2em
 }

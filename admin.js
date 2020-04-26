@@ -11,10 +11,11 @@ var Questions = [];
 $(document).ready(function() {
 	setDefaultValues();
 	$table = $('#btable');
-	$select = $('#myselect');
-	$('#qselectform').submit(function(event) {
-		event.preventDefault();
-	});
+	$gmtable = $('#gamestable');
+	$('#qselectform').submit(function(event) {event.preventDefault(); }); // stops form submit function
+});
+
+$(function() {
 	$('#qcat').change(function() {
 		let cat = $('#qcat option:selected').val();
 		console.log("selected option: "+cat);
@@ -23,10 +24,32 @@ $(document).ready(function() {
 });
 
 $(function() {
-    $select.click(function () {
-      alert('getSelections: ' + JSON.stringify($table.bootstrapTable('getSelections')))
+    $('#myselect').click(function () {
+		var qids = "";
+		let ids=$table.bootstrapTable('getSelections');
+//		JSON.stringify(ids);
+		ids.forEach(function(item,index) {
+//			console.log("QID: " +item.qid);
+			qids = item.qid +","+qids;
+		});
+		console.log("QIDs: " +qids);
+		$("#qmgquestions").val(qids);
 	});
 });
+
+/* $(function() {
+    $gmtable.click(function () {
+      alert('getSelections: ' + JSON.stringify($gmtable.bootstrapTable('getSelections')))
+	});
+}); */
+
+function responseHandler(res) {
+    $.each(res.rows, function (i, row) {
+      row.state = $.inArray(row.id, selections) !== -1
+	});
+	console.log("Selection: "+ res);
+    return res
+  }
 
 function chooseq() {
 	if(!QM) return($('#error').text("You need to login first"));
@@ -35,32 +58,32 @@ function chooseq() {
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
-/* function getqs() {
+function getqs() {
 	if(!QM) return($('#error').text("You need to login first"));
 
 	console.log("Getting Questions");
 	$('#qtable').show();
+	$('#myselect').show();
 	socket.emit('getQuestionsRequest',QM.qmid);	
 }
- */
+
 function newgame() {
 	if(!QM) return($('#error').text("You need to login first"));
 
 	$('#newgame').show();
-	$('#gamestable').hide();
+	$('#gtable').hide();
 	socket.emit('getCatsRequest',QM.qmid);
 	socket.emit('getDiffsRequest',QM.qmid);
 	socket.emit('getGameTypesRequest',QM.qmid);
 }
 
-function addgame() {
+function setupGame() {
 //	console.log("Creating New Game");
 	let newg = new Object();
 	newg.qmid = QM.qmid;
 	newg.gamename = $('#qmgname').val();
 	console.log("Game:"+newg.gamename);
-	newg.numquestions = Questions.length;
-	newg.questions = Questions;
+	newg.questions = $('#qmgquestions').val();
 	newg.timelimit = $('#qmgtime').val();
 	newg.gametype = $('#qmgtype').val();
 //	newg.accesscode = $('#qmgacode').val();
@@ -69,32 +92,15 @@ function addgame() {
 
 socket.on('getGamesResponse',function(glist) {
 //	console.log(glist);
-	$('#gamestable').show();
-	var table = new Tabulator("#gamestable", {
-	    data: glist,
-   		responsiveLayout:true,
-	    columns:[
-			{title:"Game Name", field:"gamename",width:300},
-	    	{title:"Game Type", field:"gametype"},
-			{title:"Access Code", field:"accesscode"},
-	    	{title:"No of Questions", field:"numquestions"},
-			{title:"Time Limit", field:"timelimit"}],
-			rowDblClick:function(e, row) {
-				console.log(row._row.data.gameid);
-				window.open("gplay.html?gameid="+row._row.data.gameid, '_blank');
-  			},
-	});
+	$('#gtable').show();
+	$('#qtable').hide();
+	$('#newgame').hide();
+  	$gmtable.bootstrapTable({data: glist});
 });
 
-// // Bootstrap table
-// socket.on('getQuestionsResponse', function(qlist) {
-// 	console.log(qlist);
-// 	$table.bootstrapTable({data: qlist});
-// });
-
-socket.on('newGameResponse',function(data) {
+socket.on('newGameResponse',function(msg) {
 	clearMessages();
-	$('#message1').text("Game created");
+	$('#message1').text(msg);
 	socket.emit("getGamesRequest",QM.qmid);
 });
 
@@ -105,19 +111,44 @@ function setDefaultValues() {
 	$('#signoutbutton').hide();
 	$('#signinbutton').show();
 	$('#qselect').hide();
-	$('#gamestable').show();
 	$('#yourgames').hide();
 	$('#qtable').hide();
 	$('#newgame').hide();
+	$('#myselect').hide();
+	$('#gtable').hide();
 	clearMessages();
 }
 
-function setPostLoginValues(qm) {
+function setPostLoginValues() {
 	clearMessages();
 	$('#gameplay').show();
 	$('#prestart').show();
 	$('#yourgames').show();
-	$('#gamestable').hide();
+	$('#adminmsg').hide();
 	$('#newgame').hide();
+	socket.emit("getGamesRequest",QM.qmid);
 }
-	
+
+function actionFormatter(value, row, index) {
+    return [
+      '<a class="play" href="javascript:void(0)" title="start play">',
+//	  '<i class="fa fa-heart"></i>',
+	  '<img src="images/playicon40.png" alt="start"',
+      '</a>  ',
+      '<a class="edit" href="javascript:void(0)" title="Edit">',
+ //     '<i class="fa fa-trash"></i>',
+		'<img src="images/gears40.png" alt="edit"',
+      '</a>'
+    ].join('');
+}
+
+window.operateEvents = {
+    'click .play': function (e, value, row, index) {
+//	  alert('You click action, row: ' + JSON.stringify(row));
+	  window.open("gplay.html?gameid="+row.gamename, '_blank');
+
+    },
+    'click .edit': function (e, value, row, index) {
+      alert('Row:' +row.gamename);
+    }
+}

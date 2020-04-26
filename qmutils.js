@@ -5,7 +5,7 @@ var socket = io('', {
     'reconnectionAttempts': 5
 });
 
-var $table,$select;
+var $table;
 
 const version = "QM v0.6";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
@@ -170,10 +170,9 @@ socket.on('loginResponse', function(userinfo) {
 		$('#username').show();
 		$('#userimg').show();
 		$("#error").text("");
-		setPostLoginValues();
 		$('#registerlabel').hide();
-		console.log("User successfully signed in: "+JSON.stringify(userinfo));
-//		getUserInfo(userinfo);
+//		console.log("User successfully signed in: "+JSON.stringify(userinfo));
+		setPostLoginValues();
 	}
 	else {
 		$("#error").text("Login not valid");
@@ -348,7 +347,7 @@ function saveCookie(name, value, delay)
 /*
  * Delete cookie by setting expiry to 1st Jan 1970
  */
-function delCookie(name) 
+function deleteCookie(name) 
 {
 	document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
 }

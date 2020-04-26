@@ -1,15 +1,13 @@
 /*
 *	Quizmaster play game
 */
-
 var QM = new Object();
 var Questions = [];
 const gid = getURLParameter("gameid");
 
 $(document).ready(function() {
-	$('#users').hide();
 	setDefaultValues();
-	checksignedin();
+	$table = $('#questiontable');
 });
 
 function startGame() {
@@ -32,35 +30,55 @@ function endGame() {
 	clearMessages();
 }
 
-socket.on('loginResponse',function(qm) {
-	$('#error').text("");
-	QM = qm;
-	setPostLoginValues(QM);
-	socket.emit("preGameStartRequest",QM.qmid,gid);
+function setDefaultValues() {
+	$('#version').text(version);
+	$('#username').hide();
+	$('#userimg').hide();
+	$('#signoutbutton').hide();
+	$('#signinbutton').show();
+	$('#game').hide();
+	$('#play').hide();
+	$('#scores').hide();
 	clearMessages();
-});
+//	console.log("Doc ready");
+}
+
+function setPostLoginValues() {
+	clearMessages();
+	$('#game').show();
+	$('#prestart').show();
+	$('#gameheader').text("Game: "+gid);
+	socket.emit("preGameStartRequest",QM.qmid,gid);
+}
 
 socket.on('preGameStartResponse',function(game) {
-	updateContestants(game.contestants);
+//	console.log("Game: "+JSON.stringify(game));
 	$('#users').show();
 	$('#answers').text(0);
-	socket.emit("getQuestionsRequest",game);
+//	socket.emit("getQuestionsRequest",QM.qmid,game);
 	clearMessages();
+	$('#qtable').show();
+	$table.bootstrapTable({data: game.questions});
 });
 
 socket.on('startGameResponse',function(game) {
-	$('#gameplay').show();
-	$('#prestart').hide();
+	$('#play').show();
+	$('#startgame').hide();
 	$('#answait').hide();
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
 	if(qobject == "") {
-		$('#message1').text("");
 		$('#shscores').show();
-//		$('#nextq').show();
+		clearMessages();
+		$('#question').hide();
+		$('#qanswer').val("");
+		$('#qimage').hide();
+		$('#mchoice').hide();
 	}
 	else {
+		$('#question').text(qobject);
+		$('#question').show();
 		$('#answait').hide();
 		$('#nextq').show();
 	}
@@ -69,30 +87,25 @@ socket.on('currentQuestionUpdate',function(qobject) {
 });
 
 socket.on('timeUpdate',function(message) {
-	$('#tremain').text(message);
+	$('#timer').text(message);
 });
 
 socket.on('getQuestionsResponse',function(qlist) {
 //	console.log('Qlist: '+JSON.stringify(qlist));
 	$('#qlist').show();
-		var table = new Tabulator("#qlist", {
-		    data: qlist,
-		    columns:[
-		    {title:"ID", field:"qid"},
-				{title:"Category", field:"category"},
-		    {title:"Subcategory", field:"subcategory"},
-		    {title:"Difficulty", field:"difficulty",widthGrow:2},
-		    {title:"Type", field:"type", align:"center"},
-		    {title:"Question", field:"question",width:320},
-		    {title:"Answer", field:"answer"},
-		 	{title:"Image", field:"imageurl"}],
-		});
+	$table.bootstrapTable({data: qlist});
 });
 
 // This is called when a new contestant joins the game
 // con is an array of contestant names
 socket.on('contestantUpdate',function(con) {
-	updateContestants(con);
+//	console.log("Contestants:"+con);
+	$('#users').text(Object.keys(con).length);
+	let ulist = "";
+	for(var i in con) {
+		ulist = ulist + con[i].cname +"<br/>";
+	}
+	$('#userlist').html(ulist);
 });
 
 // This is called when a contestant submits an answer
@@ -101,30 +114,49 @@ socket.on('answersUpdate',function(ans) {
 	$('#scores').hide();
 });
 
-function updateContestants(con) {
-//	console.log("Contestants:"+con);
-	$('#users').text(Object.keys(con).length);
-	let ulist = "";
-	for(var i in con) {
-		ulist = ulist + con[i].cname +"<br/>";
-	}
-	$('#userlist').html(ulist);
-}
-
 socket.on('image',function(im) {
 	$('#qimage').attr('src',im);
+	$('#qimage').show();
 });
 
-socket.on('scoresUpdate',function(scores) {
+socket.on('multichoice',function(arr) {
+	if(arr) {
+		$('#qaform').hide();
+		Marray = arr;
+		$('#mchoice1').text(arr[0]);
+		$('#mchoice2').text(arr[1]);
+		$('#mchoice3').text(arr[2]);
+		$('#mchoice4').text(arr[3]);
+		$('#mchoice').show();
+	}
+});
+
+socket.on('scoresUpdate',function(cpoints) {
 	$('#scores').show();
-	var table = new Tabulator("#scores", {
-		layout:"fitColumns",
-		data: scores,
-		columns:[
-		{title:"Name", field:"cname"},
-		{title:"Points", field:"points"},
-		{title:"Points", field:"points",formatter:"progress",formatterParams:{color:["#00dd00", "orange", "rgb(255,0,0)"]},width:500}]
+//	$stable = $('#scorestable');
+//	$stable.bootstrapTable({data: scores});
+	var chart = new CanvasJS.Chart("scores", {
+		animationEnabled: true,
+		title:{
+			text:"Latest Scores"
+		},
+		axisX:{
+			interval: 1
+		},
+		axisY2:{
+			interlacedColor: "rgba(1,77,101,.2)",
+			gridColor: "rgba(1,77,101,.1)",
+			title: "Number of Companies"
+		},
+		data: [{
+			type: "bar",
+			name: "points",
+			axisYType: "secondary",
+			color: "#014D65",
+			dataPoints: cpoints
+		}]
 	});
+	chart.render();
 });
 
 socket.on('endGameResponse',function() {

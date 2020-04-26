@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Quizmaster Games</title>
-<!--	<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/> -->
-<!--	<script src="https://apis.google.com/js/client:platform.js?onload=initGSignin" async defer></script> -->
-<script type="text/javascript" src="jquery-2.1.3.min.js"></script>
-<link rel="stylesheet" href="bootstrap.min.css"/>
-<script type="text/javascript" src="tabulator.min.js"></script>
-	<link rel="stylesheet" href="tabulator.min.css"/>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>Quizmaster Play Game</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+	<script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com">
 	<script src="socket.io/socket.io.js"></script>
 	<script src="qmutils.js"></script>
 	<script src="gplay.js"></script>
@@ -20,55 +21,97 @@
 	<div class="well">
 		<h3>Quizmaster Game Play</h3>
 		<h5><span id="version" class="pull-left"></span></h5>
-		<span class="pull-right">
-			<button class="btn btn-info" id="userbutton"></button>
-			<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign Out</button>
-		</span>
+		<div class="pull-right">
+			<img id="userimg" width="40" height="40"/>&nbsp;<b><span id="username"></span></b>
+			<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign out</button>
+		</div>
 		<p>&nbsp;</p>
 	</div>
 	<div class="col-xs-12">
+		<div class="col-xs-3">
+			<span id="signinbutton" class="g-signin2" data-width="200" data-height="40" data-longtitle="true" data-onsuccess="onSignIn" data-theme="dark"></span>
+		</div>
 		<div class="col-xs-2">
-			<button class="btn btn-info" id="signinbutton" onclick="signIn()">Sign In</button>
+			<button id="registerlabel" class="btn btn-primary" onclick="register()">Register</button>
 		</div>
 	</div>
-	<p>&nbsp;</p>
-	<div id="gameplay">
+	<p class="messages" id="error"></p>
+	<p class="messages" id="message1"></p>
+	<p class="gtitle" id='gameheader'></p>
+	<div id="game">
 		<div id="prestart">
-			<span class="messages">Gamers joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></span>
-			<p>&nbsp;</p>
-			<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
-		</div>
-		<button class="btn btn-info" id="nextq" onclick="nextQuestion()">Next Question</button>
-		<p>&nbsp;</p>
-		<span id="answait" class="messages">Answers received: <button type="button" class="btn btn-warning" id="answers"></button></span><br/>
-		<button type="button" class="btn btn-warning" id="shscores" onclick="showScores()">Show Scores</button>
-		<div id="mymodal" class="modal fade" role="dialog">
-			<div class="modal-dialog modal-sm">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal">&times;</button>
-						<h4 class="modal-title">Contestants Ready to Play</h4>
-					</div>
-					<div class="modal-body">
-						<p id="userlist"></p>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			<span class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></span>
+			<div id="mymodal" class="modal fade" role="dialog">
+				<div class="modal-dialog modal-sm">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal">&times;</button>
+							<h4 class="modal-title">Contestants Ready to Play</h4>
+						</div>
+						<div class="modal-body">
+							<p id="userlist"></p>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
 					</div>
 				</div>
 			</div>
+			<p>&nbsp;</p>
+			<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
 		</div>
-		<p><strong id='gameheader'></strong></p>
-		<p><strong id="qheader"></strong></p>
-		<p><img id='qimage'></p>
-		<p class="messages" id="error"></p>
-		<p class="messages" id="message1"></p>
-	<div id='scores'></div>
-		<p>&nbsp;</p>
-		<div id="qlist"></div>
-		<p>&nbsp;</p>
-		<p class="messages" id="message2"></p>
-		<button class="btn btn-info" onclick="endGame()">End this game</button>
+		<div id="play">
+			<button class="btn btn-info" id="nextq" onclick="nextQuestion()">Next Question</button>
+			<p class="qheader" id="qheader"></p>
+			<p class="qclass" id="question"></p>
+			<div class="countdown" id="timer"></div>
+			<p><img id='qimage'></p>
+			<div id="mchoice" class="col-xs-8">
+				<div class="btn-group">
+					<button id="mchoice1" type="button" class="btn btn-primary customb" onclick="mcanswer(0)"></button>
+					<button id="mchoice2" type="button" class="btn btn-success customb" onclick="mcanswer(1)"></button>
+					<button id="mchoice3" type="button" class="btn btn-warning customb" onclick="mcanswer(2)"></button>
+					<button id="mchoice4" type="button" class="btn btn-danger customb" onclick="mcanswer(3)"></button>
+				</div>
+			</div>
+			<p id="answait" class="messages">Answers received: <button type="button" class="btn btn-warning" id="answers"></button></p>
+			<button class="btn btn-warning" id="shscores" onclick="showScores()">Show Scores</button>
+			<button class="btn btn-info" onclick="endGame()">End this game</button>
+		</div>
+		<div id="scores" style="height: 250px; width: 100%;"></div>
+		<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<!-- 		<div id='scores'>
+			<table id="scorestable"
+				class="table table-striped"
+				data-toggle="scorestable"
+				data-side-pagination="server">
+				<thead class="thead-light">
+				<tr>
+					<th data-field="cname">Name</th>
+					<th data-field="points">Points</th>
+				</tr>
+				</thead>
+			</table>
+		</div> -->
+		<div id="qtable">
+			<table
+				id="questiontable"
+				class="table table-striped"
+				data-toggle="questiontable"
+				data-side-pagination="server">
+				<thead class="thead-light">
+				<tr>
+					<th data-field="category">Category</th>
+					<th data-field="subcategory">Subcategory</th>
+					<th data-field="difficulty">Difficulty</th>
+					<th data-field="type">Type</th>
+					<th data-field="question">Question</th>
+					<th data-field="answer">Answer</th>
+					<th data-field="imageurl">Image URL</th>
+				</tr>
+				</thead>
+			</table>
+		</div>
 	</div>
 </div>
 </body>

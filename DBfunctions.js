@@ -144,12 +144,58 @@ DB.prototype.getQuestionById = function(id,callback) {
 }
 
 DB.prototype.getGames = function(id,callback) {
-  console.log("Getting question id "+id);
-  CollGames.find({qmid:Number(id)}).toArray(function(err,result) {
+//  console.log("Getting Games for: "+id);
+  CollGames.find({qmid:id}).toArray(function(err,result) {
     if (err) console.log("No games for QM id: "+id);
     // console.log("q "+id+" details: "+result);
     callback(result);
   });
+}
+
+// Insert a new game in the games collection
+DB.prototype.createNewGame = function(game,callback) {
+  game.accesscode = generateAccesscode();
+  CollGames.insertOne(game, function(err, res) {
+    if (err) throw err;
+    callback("Game inserted:" +res.insertedId);
+  });
+}
+
+// get game details from DB to start or edit the game
+DB.prototype.getGameByName = function(id,name,callback) {
+  CollGames.find({qmid:id,gamename:name}).toArray(function(err, results) {
+    if (err) throw err;
+    callback(results[0]);
+  });
+}
+
+// get game details from DB to start or edit the game
+DB.prototype.getQuestionsByID = function(qlist,callback) {
+  var arr = [];
+  qlist.forEach(function (id,index) {
+    var obj = new Object();
+    obj.qid = Number(id);
+    arr.push(obj);
+  });
+   var qobj = new Object();
+  qobj.$or = arr;
+ // the query should end up like: {$or:[{qid:2179},{qid:2181},]},{_id:false}
+// console.log("Query str: "+JSON.stringify(qobj));
+  CollQuestions.find(qobj,{_id:false}).toArray(function(err,results) {
+    if (err) throw err;
+    callback(results);
+  });
+}
+
+// creates a random game access code for contestants to enter the game
+function generateAccesscode() {
+  var length = 8,
+  charset = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789",
+  retVal = "";
+  for(var i = 0, n = charset.length; i < length; ++i) {
+      retVal += charset.charAt(Math.random() * n);
+  }
+  return retVal;
 }
 
 /*
@@ -284,15 +330,5 @@ DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,socket) {
   });
 }
 */
-
-function generateAccesscode() {
-  var length = 8,
-  charset = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789",
-  retVal = "";
-  for(var i = 0, n = charset.length; i < length; ++i) {
-      retVal += charset.charAt(Math.random() * n);
-  }
-  return retVal;
-}
 
 module.exports = DB;
