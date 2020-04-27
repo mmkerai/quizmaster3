@@ -51,19 +51,19 @@ socket.on('joinGameResponse',function(contestant) {
 	saveCookie("quizmaster",contestant.token,1800);	// save credentials for 30 mins
 });
 
-socket.on('timeUpdate',function(message) {
+/* socket.on('timeUpdate',function(message) {
 	$('#timer').text(message);
-});
-/* 
+}); */
+
 socket.on('timeUpdate',function(message) {
-//	$('#tremain').text(message);
+//	$('#timer').text(message);
 	if(message == 0) {
 		hideCountdown();
 	} else {
 		showCountdown();
-		$('#counter').text(message);
+		$('#timer').text(message);
 	}
-}); */
+});
 
 // This is called when a new contestant joins the game
 // con is an array of contestant names
@@ -125,20 +125,6 @@ socket.on('submitAnswerResponse',function(msg) {
 	$('#mchoice').hide();
 });
 
-socket.on('scoresUpdate',function(score) {
-	$('#scores').show();
-	var table = new Tabulator("#scores", {
-		layout:"fitColumns",
-		data: score,
-		responsiveLayout:true,
-	    columns:[
-			{title:"Name", field:"cname"},
-			{title:"Points", field:"points"},
-			{title:"Points", field:"points",formatter:"progress",formatterParams:{color:["#00dd00","orange","rgb(255,0,0)"]},width:500}
-		]	
-	});
-});
-
 // submit a text or num answer with token
 function submitanswer() {
 	let ans = new Object();
@@ -169,9 +155,9 @@ function setDefaultValues() {
 }
 
 function showCountdown() {
-  document.getElementById("counter").style.display = "block";
+  document.getElementById("timer").style.display = "block";
 }
 
 function hideCountdown() {
-  document.getElementById("counter").style.display = "none";
+  document.getElementById("timer").style.display = "none";
 }

@@ -131,34 +131,6 @@ socket.on('multichoice',function(arr) {
 	}
 });
 
-socket.on('scoresUpdate',function(cpoints) {
-	$('#scores').show();
-//	$stable = $('#scorestable');
-//	$stable.bootstrapTable({data: scores});
-	var chart = new CanvasJS.Chart("scores", {
-		animationEnabled: true,
-		title:{
-			text:"Latest Scores"
-		},
-		axisX:{
-			interval: 1
-		},
-		axisY2:{
-			interlacedColor: "rgba(1,77,101,.2)",
-			gridColor: "rgba(1,77,101,.1)",
-			title: "Number of Companies"
-		},
-		data: [{
-			type: "bar",
-			name: "points",
-			axisYType: "secondary",
-			color: "#014D65",
-			dataPoints: cpoints
-		}]
-	});
-	chart.render();
-});
-
 socket.on('endGameResponse',function() {
 	window.close();
 });

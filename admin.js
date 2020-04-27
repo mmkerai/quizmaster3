@@ -86,7 +86,6 @@ function setupGame() {
 	newg.questions = $('#qmgquestions').val();
 	newg.timelimit = $('#qmgtime').val();
 	newg.gametype = $('#qmgtype').val();
-//	newg.accesscode = $('#qmgacode').val();
 	socket.emit('newGameRequest',QM.qmid,newg);
 }
 
@@ -102,6 +101,11 @@ socket.on('newGameResponse',function(msg) {
 	clearMessages();
 	$('#message1').text(msg);
 	socket.emit("getGamesRequest",QM.qmid);
+});
+
+socket.on('deleteGameResponse',function(msg) {
+	clearMessages();
+	$('#message1').text(msg);
 });
 
 function setDefaultValues() {
@@ -131,24 +135,35 @@ function setPostLoginValues() {
 
 function actionFormatter(value, row, index) {
     return [
-      '<a class="play" href="javascript:void(0)" title="start play">',
+      '<a class="play" href="javascript:void(0)" title="Start Play">',
 //	  '<i class="fa fa-heart"></i>',
-	  '<img src="images/playicon40.png" alt="start"',
+		'<img src="images/playicon40.png" alt="start"',
       '</a>  ',
       '<a class="edit" href="javascript:void(0)" title="Edit">',
- //     '<i class="fa fa-trash"></i>',
 		'<img src="images/gears40.png" alt="edit"',
-      '</a>'
+	  '</a>',
+	  '<a class="delete" href="javascript:void(0)" title="Delete">',
+		'<img src="images/trash40.png" alt="trash"',
+	  '</a>'
     ].join('');
 }
 
 window.operateEvents = {
     'click .play': function (e, value, row, index) {
 //	  alert('You click action, row: ' + JSON.stringify(row));
-	  window.open("gplay.html?gameid="+row.gamename, '_blank');
-
+		window.open("gplay.html?gameid="+row.gamename, '_blank');
     },
     'click .edit': function (e, value, row, index) {
-      alert('Row:' +row.gamename);
-    }
+		$('#newgame').show();
+		$('#gtable').hide();
+		$('#qmgname').val(row.gamename);
+		$('#qmgquestions').val(row.questions);
+	 	$('#qmgtime').val(row.timelimit);
+	 	$('#qmgtype').val(row.gametype);
+	},
+	'click .delete': function (e, value, row, index) {
+	  if(confirm('Are you sure you want to delete game: ' + JSON.stringify(row.gamename))) {
+		  socket.emit('deleteGameRequest',QM.qmid,row);
+	  }
+	}
 }

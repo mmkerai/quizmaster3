@@ -298,13 +298,64 @@ socket.on('announcement',function(message) {
 
 socket.on('endOfGame', function() {
 	$('#qheader').text("End of Game");
-	delCookie("quizmaster");
+	deleteCookie("quizmaster");
 });
 
-function getUserInfo(user) {
+socket.on('scoresUpdate',function(cpoints) {
+	$('#scores').show();
+	var cons = [];
+	var pts = [];
+	cpoints.forEach(c => {
+		cons.push(c.cname);
+		pts.push(c.points);
+	})
+	var ctx = $('#scores');
+	Chart.defaults.global.animation.duration = 3000;
+	Chart.defaults.global.legend.position = "bottom";
+	var scores = new Chart(ctx, {
+		type: 'horizontalBar',
+		data: {
+			labels: cons,
+			datasets: [{
+				barPercentage: 0.9,
+        		barThickness: "flex",
+        		maxBarThickness: 40,
+        		minBarLength: 2,
+				label: 'Points',
+				data: pts,
+				backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850"],
+				borderWidth: 2
+			}]
+		},
+		options: { title: {
+			display: true,
+			fontSize: 16,
+            text: 'Scores'},
+			scales: {
+				yAxes: [{
+					display: true,
+					gridLines: {
+						display: false
+					},
+					scaleLabel: {
+						display: true,
+						fontSize: 16,
+						fontStyle: "oblique",
+						labelString: 'Contestant'
+					},
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+});
+
+/* function getUserInfo(user) {
 	clearMessages();
 	socket.emit('getUserInfoRequest',user.uid);
-}
+} */
 
 function readCookie(name)
 {

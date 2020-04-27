@@ -152,12 +152,50 @@ DB.prototype.getGames = function(id,callback) {
   });
 }
 
+// Check if game exists in games collection
+DB.prototype.gameExists = function(game,callback) {
+  CollGames.findOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
+    if (err) throw err;
+//    console.log("Res: "+ JSON.stringify(res));
+    if(res)
+      callback(true);
+    else
+      callback(false);
+  });
+}
+
 // Insert a new game in the games collection
 DB.prototype.createNewGame = function(game,callback) {
   game.accesscode = generateAccesscode();
   CollGames.insertOne(game, function(err, res) {
     if (err) throw err;
-    callback("Game inserted:" +res.insertedId);
+    if(res)
+      callback(true);
+    else
+      callback(false);
+  });
+}
+
+// Update a game in the games collection
+DB.prototype.updateGame = function(game,callback) {
+  let obj = new Object();
+  obj.$set = game;
+  // object should end up like {$set: {qmid: 123xxx, gamename: xxxx, etc}}
+  CollGames.updateOne({qmid:game.qmid,gamename:game.gamename}, obj, function(err, res) {
+    if (err) throw err;
+    if(res)
+      callback(true);
+    else
+      callback(false);
+  });
+}
+
+// Delete a game in the games collection
+DB.prototype.deleteGame = function(game,callback) {
+  CollGames.deleteOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
+    console.log("Res: "+ JSON.stringify(res));
+    if (err) throw err;
+    callback(true);
   });
 }
 
@@ -173,11 +211,11 @@ DB.prototype.getGameByName = function(id,name,callback) {
 DB.prototype.getQuestionsByID = function(qlist,callback) {
   var arr = [];
   qlist.forEach(function (id,index) {
-    var obj = new Object();
+    let obj = new Object();
     obj.qid = Number(id);
     arr.push(obj);
   });
-   var qobj = new Object();
+  let qobj = new Object();
   qobj.$or = arr;
  // the query should end up like: {$or:[{qid:2179},{qid:2181},]},{_id:false}
 // console.log("Query str: "+JSON.stringify(qobj));

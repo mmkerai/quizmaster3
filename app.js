@@ -261,10 +261,44 @@ io.on('connection',function(socket) {
     game.questions = qmt.getQuestionList(game.questions);
     if(game.questions.length < 1)
       return(socket.emit("gameSetupErrorResponse","Question list error"));
-    console.log("Creating new game: "+game);
-    dbt.createNewGame(game,function(msg) {
-      console.log(msg);
-      socket.emit('newGameResponse',"New game added: "+game.gamename);
+
+// If existing game then update it else create new one.
+// Game name needs to be unique per QM id (google user)
+    dbt.gameExists(game,function(status) {
+      let str = "";
+      if(status) {  // game exists
+        console.log("Updating game: "+game.gamename);
+        dbt.updateGame(game,function(res) {
+          if(res) // went well
+            str = "Game updated: "+game.gamename;
+          else
+            str = "Game update error: "+game.gamename;
+
+          socket.emit('newGameResponse',str);
+        });
+      }
+      else {    // game doesnt exist so create new one
+        console.log("Creating new game: "+game.gamename);
+        dbt.createNewGame(game,function(res) {
+          if(res) // went well
+            str = "New Game created: "+game.gamename;
+          else
+            str = "Game error: "+game.gamename;
+
+          socket.emit('newGameResponse',str);
+        });
+      }
+     });
+  });
+
+  // called by quizmaster to delete a game
+  socket.on('deleteGameRequest',function(qmid,game) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    dbt.deleteGame(game, function (status) {
+      if(status)  // all good
+        socket.emit("deleteGameResponse","Game deleted: "+game.gamename);
+      else
+        socket.emit("errorResponse","Error deleting "+game.gamename);
     });
   });
 
@@ -297,17 +331,15 @@ io.on('connection',function(socket) {
 // called by quizmaster to show latest scores
   socket.on('showScoresRequest',function(qmid,gname) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    let scores = [];
-//    let scores = qmt.getContestantScores(gname);   // current scores
-// Test to see how score is displayed
-    for(var i=0; i < 5; i++) {
+//    let scores = [];
+    let scores = qmt.getContestantScores(gname);   // current scores
+/* // Test to see how score is displayed
+    for(var i=0; i < 3; i++) {
       let c = new Object();
-//      c["cname"] = "con"+i;
-//      c["points"] = Math.random() * 100;
-      c["label"] = "con"+i;
-      c["y"] = Math.random() * 100;
+      c["cname"] = "con"+i;
+      c["points"] = Math.random() * 100;
       scores.push(c);
-    }
+    } */
     if(scores) {
       io.in(gname).emit('scoresUpdate',scores);
     }
@@ -320,6 +352,7 @@ io.on('connection',function(socket) {
   socket.on('endGameRequest',function(qmid,gamename) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     qmt.endOfGame(gamename); //housekeeping
+    socket.emit("endGameResponse","");
   });
 
 // used by contestant to join game so no login/auth required
@@ -367,11 +400,11 @@ io.on('connection',function(socket) {
         }
         else {
 //          console.log("Contestant token error: "+game.gamename);
-          socket.emit("errorResponse","Contestant token error");
+          socket.emit("errorResponse","Contestant token error, please signout and re-join");
         }
       }
       else {
-        socket.emit("errorResponse","Game token error");
+        socket.emit("errorResponse","Game token error, please sign out and re-join");
       }
     }
   });
