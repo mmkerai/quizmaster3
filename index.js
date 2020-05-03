@@ -55,16 +55,6 @@ socket.on('joinGameResponse',function(contestant) {
 	$('#timer').text(message);
 }); */
 
-socket.on('timeUpdate',function(message) {
-//	$('#timer').text(message);
-	if(message == 0) {
-		hideCountdown();
-	} else {
-		showCountdown();
-		$('#timer').text(message);
-	}
-});
-
 // This is called when a new contestant joins the game
 // con is an array of contestant names
 socket.on('contestantUpdate',function(con) {
@@ -146,18 +136,11 @@ function mcanswer(value) {
 function setDefaultValues() {
 	$('#version').text(version);
 	$('#username').hide();
+	$('#signoutbutton').hide();
 	$('#game').hide();
 	$('#play').hide();
 	$('#qaform').hide();
 	$('#mchoice').hide();
 	$('#scores').hide();
 	clearMessages();
-}
-
-function showCountdown() {
-  document.getElementById("timer").style.display = "block";
-}
-
-function hideCountdown() {
-  document.getElementById("timer").style.display = "none";
 }

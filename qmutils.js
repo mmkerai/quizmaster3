@@ -7,11 +7,13 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.7";
+const version = "QM v0.8";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var auth2; // The Sign-In object.
 var googleUser; // The current user.
+var countdownsound = new Audio('audio/countdown.mp3');
+var qcountsound = new Audio('audio/questionwait.mp3');
 
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
@@ -272,6 +274,33 @@ socket.on('announcement',function(message) {
 	$('#qheader').text(message);
 });
 
+socket.on('timeUpdate',function(message) {
+//	$('#timer').text(message);
+	if(message == 0) {
+		hideCountdown();
+//		$('#countdownsound').get(0).pause();
+	} else {
+		showCountdown();
+		$('#timer').text(message);
+//		$('#countdownsound').get(0).play();
+	}
+});
+
+socket.on('audioUpdate',function(sobj) {
+	if(sobj.type == 'prequestion') {
+		if(sobj.action == 'start')
+			countdownsound.play();
+		else
+			countdownsound.pause();		// type must be stop
+	}
+	else if(sobj.type == 'postquestion') {
+		if(sobj.action == 'start')
+			qcountsound.play();
+		else
+			qcountsound.pause();		// type must be stop
+	}
+});
+
 socket.on('endOfGame', function() {
 	$('#qheader').text("End of Game");
 	deleteCookie("quizmaster");
@@ -333,6 +362,15 @@ socket.on('scoresUpdate',function(cpoints) {
 	socket.emit('getUserInfoRequest',user.uid);
 } */
 
+function showCountdown() {
+	document.getElementById("timer").style.display = "block";
+}
+  
+  function hideCountdown() {
+	document.getElementById("timer").style.display = "none";
+}
+
+  
 function readCookie(name)
 {
   name += '=';

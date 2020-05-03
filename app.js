@@ -382,6 +382,7 @@ io.on('connection',function(socket) {
   socket.on('endGameRequest',function(qmid,gamename) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     qmt.endOfGame(gamename); //housekeeping
+    io.in(gamename).emit('announcement','Quizmaster has ended the game!');
     socket.emit("endGameResponse","");
   });
 
@@ -530,6 +531,7 @@ function preQuestion(game) {
   io.in(game.gamename).emit('answersUpdate',game.answers);
   //  io.to(QMSockets[game.qmid]).emit("answersUpdate",game.answers);  // tell the QM
   var clock = setTimeout(gcountdown,1000,game,GCOUNTDOWNTIME);
+  io.in(game.gamename).emit('audioUpdate',{action: 'start',type:'prequestion'});
 }
 
 // count down before start of each question. Once coundown hits 0, show the question
@@ -540,6 +542,7 @@ function gcountdown(game,time) {
   else {
     io.in(game.gamename).emit('timeUpdate',0);
     postQuestion(game); // show the question
+    io.in(game.gamename).emit('audioUpdate',{action: 'stop',type:'prequestion'});
     }
 }
 
@@ -561,6 +564,7 @@ function postQuestion(game) {
   let str = "Question "+(game.cqno+1) +" of "+game.numquestions;
   io.in(game.gamename).emit('announcement',str);
   game.qstarttime = new Date();   // question start time
+  io.in(game.gamename).emit('audioUpdate',{action: 'start',type:'postquestion'});
   setTimeout(qcountdown,1000,game,game.timelimit);
 }
 
@@ -571,6 +575,7 @@ function qcountdown(game,time) {
   if(time > 0)
     setTimeout(qcountdown,1000,game,time-1);  // continue countdown
   else {
+    io.in(game.gamename).emit('audioUpdate',{action: 'stop',type:'postquestion'});
     endQuestion(game);
     }
 }
