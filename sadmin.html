@@ -45,47 +45,38 @@
 	</div>
 	<p>&nbsp;</p>
 	<div id="qreview"></div></br>
-	<form id="reviewq" class="inputform" method="POST">
+	<!-- <form id="reviewq" class="inputform" method="POST"> -->
 	Category<select id="qcat"></select>
-	SubCategory<select id="qsubcat"></select>
+	<!-- SubCategory<select id="qsubcat"></select> -->
 	<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
-	<p>&nbsp;</p>
-	<button class="btn btn-warning" id='myselect'>Get selection</button>
-	</table>
-	</form>
+	<!-- </form> -->
 	<div id="qtable">
 		<table
 			id="btable"
 			class="table table-striped"
+			data-sort-class="table-active"
 			data-toggle="btable"
-			data-height="384"
-			data-search="false"
-			data-show-refresh="true"
-			data-filter-control="true"
-			data-method="get"
+			data-height="420"
+			data-search="true"
 			data-pagination="true"
-			data-show-pagination-switch="true"
 			data-page-list="[10, 20, 30]"
-			data-detail-view="true"
-			data-detail-view-by-click="true"
-			data-detail-view-icon="false"
-			data-click-to-select="true"
-			data-side-pagination="server">
+			data-single-select="true"
+			data-click-to-select="true">
 			<thead class="thead-light">
 			<tr>
-				<th data-field="state" data-checkbox="true"></th>
-				<th data-field="category" data-sortable="true" data-filter-control="select">Category</th>
-				<th data-field="subcategory" data-sortable="true" data-filter-control="select">Subcategory</th>
-				<th data-field="difficulty">Difficulty</th>
-				<th data-field="type">Type</th>
+				<!-- <th data-field="state" data-checkbox="true"></th> -->
+				<th data-field="qid">ID</th>
+				<th data-field="category">Category</th>
+				<th data-field="subcategory" data-sortable="true">Subcategory</th>
+				<th data-field="difficulty" data-sortable="true">Difficulty</th>
+				<th data-field="type" data-sortable="true">Type</th>
 				<th data-field="question">Question</th>
 				<th data-field="answer">Answer</th>
 				<th data-field="imageurl">Image URL</th>
+				<th data-field="operate" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
 			</tr>
 			</thead>
 		</table>
 	</div>
-<p>&nbsp;</p>
-	<p class="text-center" id="message2"></p>
 </body>
 </html>

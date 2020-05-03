@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var app = require('express')();
 var	server = http.createServer(app);
 var	io = require('socket.io')(server);
+const fs = require('fs');
+const rln = require('readline');
 const {OAuth2Client} = require('google-auth-library');
 
 app.use(bodyParser.json());       // to support JSON-encoded bodies
@@ -32,8 +34,9 @@ const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
 //const SUPERADMIN = "thecodecentre@gmail.com";
 const SUPERADMIN = "103301973641709867567"; //google id for thecodecentre@gmail.com
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
-var QMSockets = new Object(); // keep list of socket ids for each quizmaster
-
+const QFile = "";
+//const QFile = "QMQuestions2.json";
+const QIDSTART = 3626;
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 var NewCats = new Object();
 const IMAGEURL = "http://tropicalfruitandveg.com/quizmaster/";
@@ -157,9 +160,16 @@ io.on('connection',function(socket) {
     });
   });    
 
+  socket.on('loadQuestionsRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    const str = "Loading Questions to DB from file "+QFile;
+		console.log(str);
+    loadquestions(QFile,socket);
+		socket.emit('infoResponse',str);
+  });
+
   socket.on('getCatsRequest',function(qmid){
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
- //   console.log("getCatsRequest QM ID: "+qmid);
     let qcat = qmt.getCategories();
  //   console.log("Categories are: "+JSON.stringify(qcat));
 		socket.emit('getCatsResponse',qcat);
@@ -178,12 +188,19 @@ io.on('connection',function(socket) {
 		socket.emit('getDiffsResponse',qdiff);
   });
 
-  socket.on('getGameTypesRequest',function(qmid) {
+  socket.on('getQuestionTypesRequest',function(qmid){
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    let qtype = qmt.getGameTypes();
-		socket.emit('getGameTypesResponse',qtype);
+    let qtype = qmt.getQuestionTypes();
+		socket.emit('getQuestionTypesResponse',qtype);
   });
 
+  socket.on('getGameTypesRequest',function(qmid) {
+    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    let gtype = qmt.getGameTypes();
+		socket.emit('getGameTypesResponse',gtype);
+  });
+
+// This should not be called during PROD as there are too many questions  
   socket.on('getQuestionsRequest',function(qmid,game) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting questions");
@@ -192,26 +209,37 @@ io.on('connection',function(socket) {
     });
   });
 
-  socket.on('getQuestionsByCatandSubcat',function(qmid,cat,subcat) {
+  socket.on('getQuestionsByCatRequest',function(qmid,cat) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    console.log("Getting questions for category: "+cat+":"+subcat);
-    let qlist = dbt.getQuestionsByCatandSubcat(cat,subcat,socket);
+    console.log("Getting questions for category: "+cat);
+    dbt.getQuestionsByCat(cat, function(qlist) {
+      if(qlist.length > 0)
+        socket.emit('getQuestionsResponse',qlist);
+      else
+        socket.emit('errorResponse',"No questions");
+    });
   });
 
-  socket.on('getQuestionByIdRequest',function(qid) {
+  socket.on('getQuestionByIdRequest',function(qmid,qid) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting question with ID: "+qid);
-    let qm = qmt.getQuestionById(qid);
-//    console.log(qm);
-    socket.emit("getQuestionByIdResponse",qm);
+    dbt.getQuestionById(qid,function(qm) {
+      if(qm.length > 0) //make sure question id was valid
+        socket.emit("getQuestionByIdResponse",qm[0]);
+      else
+        socket.emit('errorResponse',"Question ID not found");
+    });
   });
 
-  socket.on('updateQuestionRequest',function(qobj) {
+  socket.on('updateQuestionRequest',function(qmid,qobj) {
     if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    console.log("Updating question with ID: "+qobj.qid);
-    let qm = qmt.updateQuestion(qobj);
-//    console.log(qobj);
-    socket.emit("updateQuestionResponse","Question Updated");
+//    console.log("Updating question with ID: "+qobj.qid);
+    dbt.updateQuestion(qobj,function(status) {
+      if(status)
+        socket.emit("updateQuestionResponse","Question Updated");
+      else
+        socket.emit('errorResponse',"Question update error");
+    });
   });
 
   socket.on('getGamesRequest',function(qmid) {
@@ -261,6 +289,8 @@ io.on('connection',function(socket) {
     game.questions = qmt.getQuestionList(game.questions);
     if(game.questions.length < 1)
       return(socket.emit("gameSetupErrorResponse","Question list error"));
+    if(game.questions.length > 10)
+      return(socket.emit("gameSetupErrorResponse","Maximum 10 questions allowed"));
 
 // If existing game then update it else create new one.
 // Game name needs to be unique per QM id (google user)
@@ -428,14 +458,6 @@ io.on('connection',function(socket) {
     }
   });
 
-// get all questions for a game
- /*  socket.on('getQuestionsRequest',function(game) {
-    if(AUTHUSERS[socket.id] != game.qmid) return(autherror(socket));
-    let qlist = qmt.getGameQuestions(game);
-      socket.emit('getQuestionsResponse',qlist);
-//      console.log('qlist: '+JSON.stringify(qlist));
-  }); */
-
 }); //end of io.on
 
 /*******************************************
@@ -448,8 +470,8 @@ function removeSocket(id,evname) {
 
 function loadquestions(file,socket) {
 
-    dbt.clearAllQuestions();
-    QIDLast = QIDSTART;    // reset question id
+//    dbt.clearAllQuestions();
+    let qidlast = QIDSTART;    // reset question id
     var rd = rln.createInterface({
         input: fs.createReadStream(file),
         console: false
@@ -457,10 +479,10 @@ function loadquestions(file,socket) {
 
     rd.on('line', function(line) {
 //      collectCats(line);
-      let qobj = qmt.validatequestion(line,QIDLast);  // check that questions have correct values
+      let qobj = qmt.validatequestion(line,qidlast);  // check that questions have correct values
       if(qobj != null) {
         dbt.insertQuestion(qobj);
-        QIDLast++;       // increment last question id - ready for the next one
+        qidlast++;       // increment last question id - ready for the next one
       }
     });
 

@@ -54,7 +54,7 @@ DB.prototype.checkQMaster = function(uid,callback) {
 DB.prototype.insertQuestion = function(qobj) {
   CollQuestions.insertOne(qobj, function(err, res) {
     if (err) throw err;
-    console.log("1 question inserted:" +res.insertedId);
+//    console.log("1 question inserted:" +res.insertedId);
   });
 }
 
@@ -69,23 +69,27 @@ DB.prototype.updateQuestion = function(qobj,callback) {
         "imageurl" : qobj.image,
         "question" : qobj.question,
         "difficulty" : qobj.difficulty,
-        "answer" : qobj.answer,
-        "used" : qobj.used,
-        "correct" : qobj.correct
+        "answer" : qobj.answer
+/*         "used" : qobj.used,    // these shouldn't be reset
+        "correct" : qobj.correct */
       }
     },
     function(err, res) {
       if (err) throw err;
-      console.log("question updated:" +qobj.qid);
-      callback(qobj);
+      if(res.length) {
+        console.log("question updated:" +JSON.stringify(res));
+        callback(true);
+      }
+      else
+        callback(false);
   });
 }
 
 // Gets total number of questions
-DB.prototype.getNumQuestions = function(method) {
+DB.prototype.getNumQuestions = function(callback) {
   CollQuestions.countDocuments({},function(err,result) {
 		if (err) throw err;
-    method(result);
+    callback(result);
   });
 }
 
@@ -118,12 +122,21 @@ DB.prototype.getQMByName = function(qname,callback) {
   });
 }
 
-DB.prototype.getQuestions = function(callback) {
-  //  console.log("Getting question");
-    CollQuestions.find({}).toArray(function(err,result) {
-      if (err) console.log("No questions"); 
-      callback(result);
-    });
+// This should not be called with PROD data as it is too long
+/* DB.prototype.getQuestions = function(callback) {
+//  console.log("Getting question");
+  CollQuestions.find({}).toArray(function(err,result) {
+    if (err) console.log("No questions"); 
+    callback(result);
+  });
+} */
+
+DB.prototype.getQuestionsByCat = function(cat,callback) {
+//  console.log("Getting question for "+cat);
+  CollQuestions.find({category:cat}).toArray(function(err,result) {
+    if (err) console.log("No questions for: "+cat); 
+    callback(result);
+  });
 }
   
 DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,callback) {

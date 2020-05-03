@@ -7,7 +7,7 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.6";
+const version = "QM v0.7";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var auth2; // The Sign-In object.
@@ -126,14 +126,6 @@ function signOut() {
 	});
 }
 
-// This is only for testing without using Google login
-function checksignedin() {
-/* 	QM = JSON.parse(sessionStorage.getItem("QM"));
-	if(QM.qmname)
-		socket.emit('TestLoginRequest',QM.qmname);
-	clearMessages(); */
-}
-
 function clearMessages() {
 	$("#error").text("");
 	$("#message1").text("");
@@ -204,29 +196,9 @@ socket.on('getUserInfoResponse', function(userinfo) {
 	}
 });
 
-/* socket.on('getCatsResponse',function(cats) {
-	let items = Object.getOwnPropertyNames(cats);
-	console.log(items);
-	$('select[name="qcat"]').empty();
-	$('select[name="qsubcat"]').empty();
-	//First entry in dropdown
-	$('select[name="qcat"]').append($('<option>', {
-			value: "select",
-			text : "select a category"
-		}));
-	// subsequent entries in dropdown
-	$.each(items,function(i,item) {
-    $('select[name="qcat"]').append($('<option>', {
-        value: item,
-        text : item
-    	}));
-		});
-	$('select[name="qcat"] option:selected').attr('disabled','disabled');
-}); */
-
 socket.on('getCatsResponse',function(cats) {
 	let items = Object.getOwnPropertyNames(cats);
-	console.log(items);
+//	console.log(items);
 	$('#qcat').empty();
 	$('#qsubcat').empty();
 	//First entry in dropdown
@@ -245,7 +217,7 @@ socket.on('getCatsResponse',function(cats) {
 });
 
 socket.on('getSubcatsResponse',function(subcats) {
-	console.log(subcats);
+//	console.log(subcats);
 	$('#qsubcat').empty();
 	for(const item of subcats) {
     	$('#qsubcat').append($('<option>', {
@@ -255,19 +227,12 @@ socket.on('getSubcatsResponse',function(subcats) {
 	}
 });
 
-function getqs() {
-	if(!QM)	return($('#error').text("You need to login first"));
-
-	console.log("Getting Questions");
-	$("#error").text("");
-	$('#qtable').show();
-	socket.emit('getQuestionsRequest',QM.qmid);	
-}
-
 // Bootstrap table
 socket.on('getQuestionsResponse', function(qlist) {
-	console.log(qlist);
+//	console.log(qlist);
+	$('#qtable').show();
 	$table.bootstrapTable({data: qlist});
+	$table.bootstrapTable('load', qlist);
 });
 
 socket.on('getDiffsResponse', function(diffs) {
@@ -286,6 +251,17 @@ socket.on('getQuestionTypesResponse', function(types) {
 	let items = Object.getOwnPropertyNames(types);
 	$.each(items, function(i, item) {
     	$('#qtype').append($('<option>', {
+			value: item,
+			text : item
+    	}));
+	});
+});
+
+socket.on('getGameTypesResponse', function(types) {
+	$('#qmgtype').empty();
+	let items = Object.getOwnPropertyNames(types);
+	$.each(items, function(i, item) {
+    	$('#qmgtype').append($('<option>', {
 			value: item,
 			text : item
     	}));

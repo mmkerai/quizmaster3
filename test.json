@@ -6,3 +6,6 @@
 {"Category": "MISC", "Subcategory": "GENERAL", "Image": "", "Question": "Who told the American public in 1974 \"Our long national nightmare is over\"?", "Difficulty": "HARD", "Answer": "Gerald Ford", "Type": "Text"}
 {"Category": "TV", "Subcategory": "QUOTES", "Image": "", "Question": "Name the TV character: \"Eat my shorts\"", "Difficulty": "EASY", "Answer": "Bart Simpson", "Type": "Text"}
 {"Category": "MISC", "Subcategory": "MATHS", "Image": "", "Question": "What is 4 cubed?", "Difficulty": "EASY", "Answer": "64", "Type": "Number"}
+{"Category": "Food", "Subcategory": "General", "Image": "", "Question": "What company first condensed soup in 1898?", "Difficulty": "Hard", "Answer": "Campbell's", "Type": "Text"}
+{"Category": "Food", "Subcategory": "General", "Image": "", "Question": "What nutty legume accounts for one sixth of the world's vegetable oil production?", "Difficulty": "Hard", "Answer": "Peanut", "Type": "Text"}
+{"Category": "Food", "Subcategory": "General", "Image": "", "Question": "What country saw the cultivation of the first potato, in 200 A.D.?", "Difficulty": "Hard", "Answer": "South America", "Type": "Text"}

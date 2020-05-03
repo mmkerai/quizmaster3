@@ -3,37 +3,34 @@
 */
 var QM = new Object();
 var Questions = [];
-/* var filterCategory = {
-	somekey: 'Cat',
-	anotherkey: 'Cat2'
-	}; */
 
 $(document).ready(function() {
 	setDefaultValues();
 	$table = $('#btable');
-	$gmtable = $('#gamestable');
-	$('#qselectform').submit(function(event) {event.preventDefault(); }); // stops form submit function
+//	$gmtable = $('#gamestable');
+//	$('#qselectform').submit(function(event) {event.preventDefault(); }); // stops form submit function
 });
 
-$(function() {
+/* $(function() {
 	$('#qcat').change(function() {
 		let cat = $('#qcat option:selected').val();
 		console.log("selected option: "+cat);
 		socket.emit("getSubcatsRequest",QM.qmid,cat);
 	});
 });
-
+ */
 $(function() {
     $('#myselect').click(function () {
 		var qids = "";
-		let ids=$table.bootstrapTable('getSelections');
+		var ids=$table.bootstrapTable('getSelections');
 //		JSON.stringify(ids);
 		ids.forEach(function(item,index) {
 //			console.log("QID: " +item.qid);
 			qids = item.qid +","+qids;
 		});
 		console.log("QIDs: " +qids);
-		$("#qmgquestions").val(qids);
+		var str = $("#qmgquestions").val();		// get existing list of questions
+		$("#qmgquestions").val(str+qids);		// add new selected questions
 	});
 });
 
@@ -60,11 +57,11 @@ function chooseq() {
 
 function getqs() {
 	if(!QM) return($('#error').text("You need to login first"));
-
-	console.log("Getting Questions");
+	var cat = $('#qcat').val();
+	console.log("Getting Questions for category: "+cat);
 	$('#qtable').show();
 	$('#myselect').show();
-	socket.emit('getQuestionsRequest',QM.qmid);	
+	socket.emit('getQuestionsByCatRequest',QM.qmid,cat);	
 }
 
 function newgame() {
@@ -94,7 +91,8 @@ socket.on('getGamesResponse',function(glist) {
 	$('#gtable').show();
 	$('#qtable').hide();
 	$('#newgame').hide();
-  	$gmtable.bootstrapTable({data: glist});
+  	$('#gamestable').bootstrapTable({data: glist});
+	$('#gamestable').bootstrapTable('load', glist);
 });
 
 socket.on('newGameResponse',function(msg) {

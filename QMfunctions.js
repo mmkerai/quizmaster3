@@ -115,9 +115,10 @@ const QDIFF = {
 const QTYPE = {
     TEXT:'text',MULTICHOICE:'multichoice',NUMBER:'number'};
 
-const GTYPE = {
-    PUBQUIZ:'pubquiz',ONEQUIZ:'onequiz',FUNQUIZ:'funquiz'};
-
+/* const GTYPE = {
+    PUBQUIZ:'pubquiz',ONEQUIZ:'onequiz',FUNQUIZ:'funquiz'}; */
+const GTYPE = {PUBQUIZ:'pubquiz'};
+  
 var ActiveGameByName = new Object();    //list of all active games in play by id
 var ActiveGameByCode = new Object();    //list of all accesscodes for active games
 //var Contestants = new Object();    //list of all contestants for active games
