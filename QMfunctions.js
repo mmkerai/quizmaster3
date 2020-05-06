@@ -188,6 +188,14 @@ QMQ.prototype.getActiveGame = function(gamename) {
   return(ActiveGameByName[gamename]);
 }
 
+QMQ.prototype.getAllActiveGames = function() {
+  let garray = [];
+  Object.keys(ActiveGameByName).forEach(g => {
+    garray.push(ActiveGameByName[g]);
+  }); 
+  return(garray);
+}
+
 QMQ.prototype.getCategories = function() {
   return(QCAT);
 }

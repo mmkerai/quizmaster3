@@ -34,6 +34,7 @@ const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
 //const SUPERADMIN = "thecodecentre@gmail.com";
 const SUPERADMIN = "103301973641709867567"; //google id for thecodecentre@gmail.com
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
+var SUPERUSERS = new Object(); // keep list of authenticated super users by their socket ids
 const QFile = "";
 //const QFile = "QMQuestions2.json";
 const QIDSTART = 3626;
@@ -56,6 +57,7 @@ console.log("Server started on port "+PORT);
 // Set up socket actions and responses
 io.on('connection',function(socket) {
   AUTHUSERS[socket.id] = 999;   // initialise with a number
+  SUPERUSERS[socket.id] = 999;   // initialise with a number
 
   socket.on('disconnect',function () {
     removeSocket(socket.id,"disconnect");
@@ -80,8 +82,9 @@ io.on('connection',function(socket) {
 //      console.log(payload);
       var user;
       if(payload.sub == SUPERADMIN) {
-          console.log("Super admin logged in");
-          AUTHUSERS[socket.id] = payload.sub;
+          console.log("Super admin logged in: "+payload.given_name+" at "+ new Date().toISOString());
+          SUPERUSERS[socket.id] = payload.sub; // this is the google user ID
+          AUTHUSERS[socket.id] = payload.sub; // this is the google user ID
           user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
         }
         else {
@@ -91,6 +94,12 @@ io.on('connection',function(socket) {
         socket.emit('loginSuperResponse',user);
     }
     verify().catch(console.error);
+  });
+
+  // only used by super admin. Hard coded to tcc
+  socket.on('getActiveGamesRequest',function(uid) {
+    if(SUPERUSERS[socket.id] != uid) return(autherror(socket));
+      socket.emit('getActiveGamesResponse',qmt.getAllActiveGames());
   });
 
   socket.on('registerRequest',function(token) {
@@ -160,8 +169,9 @@ io.on('connection',function(socket) {
     });
   });    
 
+  // Only allowed by Super admin
   socket.on('loadQuestionsRequest',function(qmid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(SUPERUSERS[socket.id] != qmid) return(autherror(socket));
     const str = "Loading Questions to DB from file "+QFile;
 		console.log(str);
     loadquestions(QFile,socket);
@@ -200,9 +210,10 @@ io.on('connection',function(socket) {
 		socket.emit('getGameTypesResponse',gtype);
   });
 
-// This should not be called during PROD as there are too many questions  
+// This should not be called during PROD as there are too many questions 
+// Only allowed by Super admin
   socket.on('getQuestionsRequest',function(qmid,game) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(SUPERUSERS[socket.id] != qmid) return(autherror(socket));
     console.log("Getting questions");
     dbt.getQuestions(function(qlist) {
       socket.emit('getQuestionsResponse',qlist);

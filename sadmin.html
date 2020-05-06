@@ -22,33 +22,29 @@
 			<h4>Super admin for quizmaster</h4>
 			<h5><span id="version" class="pull-left"></span></h5>
 			<div class="pull-right">
-				<img id="userimg" width="40" height="40"/>&nbsp;<b><span id="username"></span></b>
-				<button class="btn btn-warning" id="signoutbutton" onclick="signOut()">Sign out</button>
+				<img id="userimg" width="40" height="40"/>&nbsp;<b><span id="username"></span></b>&nbsp;
+				<button class="btn btn-success btn-sm" id="signoutbutton" onclick="signOut()">Sign out</button>
 			</div>
 			<p>&nbsp;</p>
 		</div>
-		<p class="text-center" id="error"></p>
-		<p class="text-center" id="message1"></p>
+		<p class="messages" id="error"></p>
+		<p class="messages" id="message1"></p>
 		<div class="col-xs-12">
 			<div class="col-xs-3">
-				<span id="signinbutton" class="g-signin2" data-width="200" data-height="40" data-longtitle="true" data-onsuccess="onSignInSuper" data-theme="dark"></span>
+				<span id="signinbutton" class="g-signin2" data-width="200" data-height="30" data-longtitle="true" data-onsuccess="onSignInSuper" data-theme="dark"></span>
 			</div>
 		</div>
 	<p>&nbsp;</p>
-	<div id="qadmin" class="col-xs-12">
-		<div class="col-xs-2">
-			<button class="btn btn-primary" onclick="loadq()">Load Questions in DB</button>
-  		</div>
-		<div class="col-xs-2">
-			<button class="btn btn-primary" onclick="reviewq()">Review questions</button>
-		</div>
+	<div id="qadmin" class="btn-group">
+		<button class="btn btn-primary" onclick="loadq()">Load Questions in DB</button>
+		<button class="btn btn-info" onclick="reviewq()">Review questions</button>
 	</div>
 	<p>&nbsp;</p>
 	<div id="qreview"></div></br>
 	<!-- <form id="reviewq" class="inputform" method="POST"> -->
 	Category<select id="qcat"></select>
 	<!-- SubCategory<select id="qsubcat"></select> -->
-	<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
+	<button class="btn btn-warning btn-sm" onClick='getqs()'>Get Questions</button>
 	<!-- </form> -->
 	<div id="qtable">
 		<table

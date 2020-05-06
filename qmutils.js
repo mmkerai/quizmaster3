@@ -370,6 +370,9 @@ function showCountdown() {
 	document.getElementById("timer").style.display = "none";
 }
 
+function isEmpty(obj) {
+    return !obj || Object.keys(obj).length === 0;
+}
   
 function readCookie(name)
 {

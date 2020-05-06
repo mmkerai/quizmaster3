@@ -47,6 +47,7 @@ socket.on('joinGameResponse',function(contestant) {
 	$('#play').show();
 	$('#username').text(contestant.userid);
 	$('#username').show();
+	$('#leave').show();
 	$('#gameheader').text("You have joined: "+contestant.gamename);
 	saveCookie("quizmaster",contestant.token,1800);	// save credentials for 30 mins
 });
@@ -136,7 +137,7 @@ function mcanswer(value) {
 function setDefaultValues() {
 	$('#version').text(version);
 	$('#username').hide();
-	$('#signoutbutton').hide();
+	$('#leave').hide();
 	$('#game').hide();
 	$('#play').hide();
 	$('#qaform').hide();

@@ -31,14 +31,14 @@ function loadq() {
 }
 
 function reviewq() {
-	if(!QM)	return($('#error').text("You need to login first"));
+	if(isEmpty(QM))	return($('#error').text("You need to login first"));
 	console.log("Reviewing Questions");
 	clearMessages();
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
 function getqs() {
-	if(!QM)	return($('#error').text("You need to login first"));
+	if(isEmpty(QM))	return($('#error').text("You need to login first"));
 //	console.log("Getting Questions");
 	clearMessages();
 	var cat = $('#qcat option:selected').val();		// get the selected category
@@ -55,8 +55,6 @@ socket.on('loginSuperResponse', function(userinfo) {
 		$('#username').show();
 		$('#userimg').show();
 		$("#error").text("");
-		$('#registerlabel').hide();
-		$('#registerbutton').hide();
 //		console.log("Super successfully signed in: "+JSON.stringify(userinfo));
 	}
 	else {
