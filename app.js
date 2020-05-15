@@ -1,7 +1,6 @@
 /* Node.js test
  * This script should run under Node.js on local server
  */
-// Version 2.0
 var http = require('http');
 var bodyParser = require('body-parser');
 var app = require('express')();
@@ -37,10 +36,9 @@ var AUTHUSERS = new Object(); // keep list of authenticated users by their socke
 var SUPERUSERS = new Object(); // keep list of authenticated super users by their socket ids
 const QFile = "";
 //const QFile = "QMQuestions2.json";
-const QIDSTART = 3626;
+const QIDSTART = 1965;
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
-var NewCats = new Object();
-const IMAGEURL = "http://tropicalfruitandveg.com/quizmaster/";
+const IMAGEURLBASE = "http://tropicalfruitandveg.com/quizmaster/";
 
 app.get('/*', function(req, res){
 	res.sendFile(__dirname + req.path);
@@ -58,6 +56,8 @@ console.log("Server started on port "+PORT);
 io.on('connection',function(socket) {
   AUTHUSERS[socket.id] = 999;   // initialise with a number
   SUPERUSERS[socket.id] = 999;   // initialise with a number
+  const clientIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+  console.log("Client IP is: "+clientIp);
 
   socket.on('disconnect',function () {
     removeSocket(socket.id,"disconnect");
@@ -80,15 +80,14 @@ io.on('connection',function(socket) {
       });
       const payload = ticket.getPayload();
 //      console.log(payload);
-      var user;
+      var user = null;
       if(payload.sub == SUPERADMIN) {
           console.log("Super admin logged in: "+payload.given_name+" at "+ new Date().toISOString());
+          user = {qmid: payload.sub,name: payload.name, imageUrl: payload.picture};
           SUPERUSERS[socket.id] = payload.sub; // this is the google user ID
-          AUTHUSERS[socket.id] = payload.sub; // this is the google user ID
-          user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
+          AUTHUSERS[socket.id] = user; // this is the google user ID
         }
         else {
-          user = null;
           console.log("Super admin login error");
         }
         socket.emit('loginSuperResponse',user);
@@ -98,8 +97,22 @@ io.on('connection',function(socket) {
 
   // only used by super admin. Hard coded to tcc
   socket.on('getActiveGamesRequest',function(uid) {
-    if(SUPERUSERS[socket.id] != uid) return(autherror(socket));
-      socket.emit('getActiveGamesResponse',qmt.getAllActiveGames());
+    if(SUPERUSERS[socket.id] != uid) return(socket.emit("errorResponse","Please login as admin"));
+    socket.emit('getActiveGamesResponse',qmt.getAllActiveGames());
+  });
+
+// only used by super admin. Hard coded to tcc
+  socket.on('getActiveUsersRequest',function(uid) {
+    if(SUPERUSERS[socket.id] != uid) return(socket.emit("errorResponse","Please login as admin"));
+    var users = [];
+    Object.keys(AUTHUSERS).forEach(u => {
+      var obj = new Object();
+      obj.socketid = u;
+      obj.userid = AUTHUSERS[u].qmid;
+      obj.username = AUTHUSERS[u].name;
+      users.push(obj);
+    });
+    socket.emit('getActiveUsersResponse',users);
   });
 
   socket.on('registerRequest',function(token) {
@@ -110,20 +123,19 @@ io.on('connection',function(socket) {
       });
       const payload = ticket.getPayload();
 //        console.log(payload);
-      var user;
+      var user = null;
       dbt.checkQMaster(payload.sub,function(exists) {
         if(exists) {  // user already in the DB
           socket.emit('registerResponse',null);
         }
         else { // not in DB so add it
-          var newQM = new qmt.createQMaster(payload);
+          const clientIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
+          console.log("Client IP is: "+clientIp);
+          var newQM = new qmt.createQMaster(payload,clientIp);
           dbt.newQMaster(newQM,function(valid) {
             if(valid) {
-              AUTHUSERS[socket.id] = payload.sub;
-              user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
-            }
-            else {
-              user = null;
+              user = {qmid: payload.sub,name: payload.name, imageUrl: payload.picture};
+              AUTHUSERS[socket.id] = user;
             }
             socket.emit('registerResponse',user);
           });
@@ -141,15 +153,12 @@ io.on('connection',function(socket) {
       });
       const payload = ticket.getPayload();
 //      console.log(payload);
-      var user;
+      var user = null;
       dbt.checkQMaster(payload.sub,function(valid) {
         if(valid) {
-          AUTHUSERS[socket.id] = payload.sub;
-          user = {qmid: payload.sub,name: payload.given_name, imageUrl: payload.picture};
-       }
-       else {
-         user = null;
-       }
+          user = {qmid: payload.sub,name: payload.name, imageUrl: payload.picture};
+          AUTHUSERS[socket.id] = user;
+        }
         socket.emit('loginResponse',user);
       });
     }
@@ -157,13 +166,13 @@ io.on('connection',function(socket) {
   });
 
   socket.on('logoutRequest',function() {
-    AUTHUSERS[socket.id] = 0;
+    delete AUTHUSERS[socket.id];
     console.log("Logged out: "+socket.id)
-    autherror(socket,"Logged out");
+    socket.emit("errorResponse","Logged Out");
   });
 
   socket.on('getUserInfoRequest',function(uid) {
-    if(AUTHUSERS[socket.id] != uid) return(autherror(socket));
+    if(!validUser(socket.id,uid)) return;
     dbt.getUserInfo(uid,function(uinfo) {
       socket.emit('getUserInfoResponse',uinfo);
     });
@@ -171,41 +180,41 @@ io.on('connection',function(socket) {
 
   // Only allowed by Super admin
   socket.on('loadQuestionsRequest',function(qmid) {
-    if(SUPERUSERS[socket.id] != qmid) return(autherror(socket));
+    if(SUPERUSERS[socket.id] != qmid) return(socket.emit("errorResponse","Please login as admin"));
     const str = "Loading Questions to DB from file "+QFile;
 		console.log(str);
     loadquestions(QFile,socket);
 		socket.emit('infoResponse',str);
   });
 
-  socket.on('getCatsRequest',function(qmid){
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('getCatsRequest',function(uid){
+    if(!validUser(socket.id,uid)) return;
     let qcat = qmt.getCategories();
  //   console.log("Categories are: "+JSON.stringify(qcat));
 		socket.emit('getCatsResponse',qcat);
   });
 
-  socket.on('getSubcatsRequest',function(qmid,cat){
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('getSubcatsRequest',function(uid,cat){
+    if(!validUser(socket.id,uid)) return;
 //    console.log("Get subcats for "+cat);
     let qsubcat = qmt.getSubCategories(cat);
 		socket.emit('getSubcatsResponse',qsubcat);
   });
 
-  socket.on('getDiffsRequest',function(qmid){
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('getDiffsRequest',function(uid){
+    if(!validUser(socket.id,uid)) return;
     let qdiff = qmt.getDifficulties();
 		socket.emit('getDiffsResponse',qdiff);
   });
 
-  socket.on('getQuestionTypesRequest',function(qmid){
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('getQuestionTypesRequest',function(uid){
+    if(!validUser(socket.id,uid)) return;
     let qtype = qmt.getQuestionTypes();
 		socket.emit('getQuestionTypesResponse',qtype);
   });
 
-  socket.on('getGameTypesRequest',function(qmid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('getGameTypesRequest',function(uid) {
+    if(!validUser(socket.id,uid)) return;
     let gtype = qmt.getGameTypes();
 		socket.emit('getGameTypesResponse',gtype);
   });
@@ -213,16 +222,16 @@ io.on('connection',function(socket) {
 // This should not be called during PROD as there are too many questions 
 // Only allowed by Super admin
   socket.on('getQuestionsRequest',function(qmid,game) {
-    if(SUPERUSERS[socket.id] != qmid) return(autherror(socket));
+    if(SUPERUSERS[socket.id] != qmid) return(socket.emit("errorResponse","Please login as admin"));
     console.log("Getting questions");
     dbt.getQuestions(function(qlist) {
       socket.emit('getQuestionsResponse',qlist);
     });
   });
 
-  socket.on('getQuestionsByCatRequest',function(qmid,cat) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    console.log("Getting questions for category: "+cat);
+  socket.on('getQuestionsByCatRequest',function(uid,cat) {
+    if(!validUser(socket.id,uid)) return;
+    console.log("Getting questions for category: "+cat+" for "+AUTHUSERS[socket.id].name);
     dbt.getQuestionsByCat(cat, function(qlist) {
       if(qlist.length > 0)
         socket.emit('getQuestionsResponse',qlist);
@@ -231,9 +240,9 @@ io.on('connection',function(socket) {
     });
   });
 
-  socket.on('getQuestionByIdRequest',function(qmid,qid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
-    console.log("Getting question with ID: "+qid);
+  socket.on('getQuestionByIdRequest',function(uid,qid) {
+    if(!validUser(socket.id,uid)) return;
+//    console.log("Getting question with ID: "+qid);
     dbt.getQuestionById(qid,function(qm) {
       if(qm.length > 0) //make sure question id was valid
         socket.emit("getQuestionByIdResponse",qm[0]);
@@ -242,8 +251,8 @@ io.on('connection',function(socket) {
     });
   });
 
-  socket.on('updateQuestionRequest',function(qmid,qobj) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+  socket.on('updateQuestionRequest',function(uid,qobj) {
+    if(!validUser(socket.id,uid)) return;
 //    console.log("Updating question with ID: "+qobj.qid);
     dbt.updateQuestion(qobj,function(status) {
       if(status)
@@ -254,7 +263,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getGamesRequest',function(qmid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     console.log("Getting Games for: "+qmid);
     dbt.getGames(qmid,function(games) {
       if(games.length > 0) {
@@ -270,7 +279,7 @@ io.on('connection',function(socket) {
 // this event is used to prepare for game start.
 // Needs to be called before starting play so players can join.
   socket.on('preGameStartRequest',function(qmid,gname) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     
     qmt.gameReady(qmid,gname,function(game) {
       if(!game)
@@ -289,7 +298,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('newGameRequest',function(qmid,game) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     if(!qmt.checkGameTypes(game.gametype))
       return(socket.emit("gameSetupErrorResponse","Invalid Game Type"));
     if(game.gamename.length < 6)
@@ -334,7 +343,7 @@ io.on('connection',function(socket) {
 
   // called by quizmaster to delete a game
   socket.on('deleteGameRequest',function(qmid,game) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     dbt.deleteGame(game, function (status) {
       if(status)  // all good
         socket.emit("deleteGameResponse","Game deleted: "+game.gamename);
@@ -345,7 +354,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to start a game
   socket.on('startGameRequest',function(qmid,gameid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     let game = qmt.getActiveGame(gameid);
     if(game) {
       socket.emit("startGameResponse",game);
@@ -358,7 +367,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to show next question
   socket.on('nextQuestionRequest',function(qmid,gameid) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     let game = qmt.getActiveGame(gameid);
     if(game) {
       game.cqno++;
@@ -371,7 +380,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to show latest scores
   socket.on('showScoresRequest',function(qmid,gname) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
 //    let scores = [];
     let scores = qmt.getContestantScores(gname);   // current scores
 /* // Test to see how score is displayed
@@ -391,7 +400,7 @@ io.on('connection',function(socket) {
 
   // called by quizmaster to end the game
   socket.on('endGameRequest',function(qmid,gamename) {
-    if(AUTHUSERS[socket.id] != qmid) return(autherror(socket));
+    if(!validUser(socket.id,qmid)) return;
     qmt.endOfGame(gamename); //housekeeping
     io.in(gamename).emit('announcement','Quizmaster has ended the game!');
     socket.emit("endGameResponse","");
@@ -439,6 +448,7 @@ io.on('connection',function(socket) {
 //          console.log(contestant.userid+" Re-joining game "+game.gamename);
           socket.join(game.gamename); // add contestant to the game room
           socket.emit("joinGameResponse",contestant); // confirm back to contestant
+          socket.emit('contestantUpdate',game.contestants);
         }
         else {
 //          console.log("Contestant token error: "+game.gamename);
@@ -453,7 +463,7 @@ io.on('connection',function(socket) {
 
 // used by contestant to submit their answer so no login/auth required
   socket.on('submitAnswerRequest',function(ans) {
-    console.log("Reg answer: "+ans.val+" for "+ans.token);
+//    console.log("Reg answer: "+ans.val+" for "+ans.token);
     let game = qmt.getGameFromToken(ans.token);
     if(game) {
       if(status = qmt.registerAnswer(game,ans)) {
@@ -470,13 +480,27 @@ io.on('connection',function(socket) {
     }
   });
 
+  // tidy up after contestant signs out of the game
+  socket.on('conLeaveRequest',function(ctoken) {
+    if(ctoken) {
+      let game = qmt.getGameFromToken(ctoken); 
+      if(game) {
+        qmt.removeContestantUsingToken(game,ctoken);
+        socket.emit("infoResponse","Signed Out");
+        io.in(game.gamename).emit('contestantUpdate',game.contestants);
+      }
+    }
+    else {
+      socket.emit("errorResponse","Token invalid");
+    }
+  });
 }); //end of io.on
 
 /*******************************************
 /* Functions below this point
 ********************************************/
 function removeSocket(id,evname) {
-		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
+//		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
     delete AUTHUSERS[id];
 }
 
@@ -490,7 +514,6 @@ function loadquestions(file,socket) {
     });
 
     rd.on('line', function(line) {
-//      collectCats(line);
       let qobj = qmt.validatequestion(line,qidlast);  // check that questions have correct values
       if(qobj != null) {
         dbt.insertQuestion(qobj);
@@ -502,36 +525,16 @@ function loadquestions(file,socket) {
       dbt.getNumQuestions(function(num) {
         socket.emit('infoResponse',"Questions loaded: "+num);
       });
-//      dbt.getNumQuestionsByCat("",socket);
-//      console.log(JSON.stringify(NewCats));
   });
 }
 
-function autherror(socket,msg) {
-  if(!msg)
-    msg = "Please login as admin";
-  socket.emit("errorResponse",msg);
-}
+// `Check if socket is from a valid user
+function validUser(sock,qmid) {
+  if(AUTHUSERS[sock].qmid)    // check not null otherwise it crashes
+    if(AUTHUSERS[sock].qmid == qmid) return(true);
 
-function collectCats(str) {
-  let scexists = 0;
-  let subcats = new Array();
-  let obj = JSON.parse(str,'utf8');
-  if(NewCats[obj.Category.toUpperCase()]) {
-    subcats = NewCats[obj.Category.toUpperCase()];
-    for(var i in subcats) {
-      if(subcats[i] == obj.Subcategory.toUpperCase())
-        scexists = 1;         // sub cat already in array
-    }
-    if(scexists == 0) {   // sub cat doesnt exist so add it to this Category
-      subcats.push(obj.Subcategory.toUpperCase());
-      NewCats[obj.Category.toUpperCase()] = subcats;
-    }
-  }
-  else {    // category doesnt exist so add both category and subcategory
-    subcats.push(obj.Subcategory.toUpperCase());
-    NewCats[obj.Category.toUpperCase()] = subcats;
-  }
+  socket.emit("errorResponse","Please login");
+  return(false);
 }
 
 // prepare to countdown before each question
@@ -568,7 +571,7 @@ function postQuestion(game) {
     io.in(game.gamename).emit('multichoice',answers);
   }
   if(q.imageurl)
-    io.in(game.gamename).emit('image',IMAGEURL+q.imageurl);
+    io.in(game.gamename).emit('image',IMAGEURLBASE+q.imageurl);
   else {
     io.in(game.gamename).emit('image',"");
   }
@@ -605,6 +608,5 @@ function endQuestion(game) {
   }
   else {
     io.in(game.gamename).emit('announcement','Please wait for the next question');
-//    preQuestion(game);
   }
 }

@@ -43,7 +43,7 @@
 	<p class="gtitle" id='gameheader'></p>
 	<div id="game">
 		<div id="prestart">
-			<span class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></span>&nbsp;
+			<span class="messages">Players joined: <button type="button" class="btn btn-warning" id="numusers" data-toggle="modal" data-target="#mymodal"></button></span>&nbsp;
 			<span id="answait" class="messages">Answers received: <button type="button" class="btn btn-warning" id="answers"></button></span>
 			<div id="mymodal" class="modal fade" role="dialog">
 				<div class="modal-dialog modal-sm">
@@ -62,6 +62,7 @@
 				</div>
 			</div>
 			<p>&nbsp;</p>
+			<p id="users"></p>
 			<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
 		</div>
 		<div id="play">

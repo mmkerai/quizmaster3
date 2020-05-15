@@ -36,9 +36,12 @@ function joinquiz() {
 
 // Contestant leave the game - which means basically clear cookie and tidy up
 function cleave() {
-	clearMessages();
-	deleteCookie("quizmaster");
-//	socket.emit('consLeaveRequest',contestant);
+	ctoken = readCookie("quizmaster");
+	if(ctoken) {
+		socket.emit('conLeaveRequest',ctoken);		// tidy up on server
+		deleteCookie("quizmaster");
+	}
+	setDefaultValues();
 }
 
 socket.on('joinGameResponse',function(contestant) {
@@ -58,17 +61,18 @@ socket.on('joinGameResponse',function(contestant) {
 
 // This is called when a new contestant joins the game
 // con is an array of contestant names
-socket.on('contestantUpdate',function(con) {
-	//	console.log("Contestants:"+con);
-		$('#users').text(Object.keys(con).length);
-		let ulist = "";
-		for(var i in con) {
-			ulist = ulist + con[i].cname +"<br/>";
-		}
-		$('#userlist').html(ulist);
-	});
-	
+/* socket.on('contestantUpdate',function(con) {
+	$('#users').empty();	// remove all old buttons (usernames)
+	for(var i in con) {		// start afresh with user list
+		var button = document.createElement('button');
+		button.innerText = con[i].cname;
+		button.className = "btn btn-primary";
+		document.getElementById('users').appendChild(button);
+	}
+}); */
+
 socket.on('currentQuestionUpdate',function(qobject) {
+	$('#users').hide();		// only required the first time to hide contentants who joined the game
 	$('#canswer').hide();
 	$('#scores').hide();
 	if(qobject.length == 0) {
@@ -137,11 +141,18 @@ function mcanswer(value) {
 function setDefaultValues() {
 	$('#version').text(version);
 	$('#username').hide();
-	$('#leave').hide();
 	$('#game').hide();
 	$('#play').hide();
 	$('#qaform').hide();
 	$('#mchoice').hide();
 	$('#scores').hide();
+	$('#gameheader').hide();
+	$('#menu').show();
+	$('#users').show();
+	var token = readCookie("quizmaster");
+	if(token)
+		$('#leave').show();
+	else
+		$('#leave').hide();
 	clearMessages();
 }

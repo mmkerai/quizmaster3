@@ -17,14 +17,13 @@
 	<script src="index.js"></script>
 	<link rel="stylesheet" href="quizmaster.css"/>
 </head>
-
 <body>
 <div class="container theme-showcase" role="main">
 	<div class="well">
 		<h3>Quizmaster</h3>
 		<h5><span id="version" class="pull-left"></span></h5>
 		<div class="pull-right">
-			<button class="btn btn-info" id="username"></button>
+			<button class="btn btn-info btn-sm" id="username"></button>
 			<button class="btn btn-success btn-sm" id="leave" onclick="cleave()">Signout</button>
 		</div>
 		<p>&nbsp;</p>
@@ -54,12 +53,14 @@
 	</form>
 	</div>
 	<div id="play">
-		<p class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></p>
+		<!-- <p class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></p> -->
+		<p class="messages">Players joined:</p>
+		<p id="users"></p>
 		<p class="qheader" id="qheader"></p>
 		<p class="qclass" id="question"></p>
 		<div class="countdown" id="timer"></div>
 		<audio id="countdownsound">   
-			<source src="audio/countdown.mp3"/>   
+			<source src="audio/countdown.mp3"/> 
 		</audio>  
 		<p><img id='qimage'></p>
 		<p>&nbsp;</p>

@@ -119,7 +119,7 @@ const QTYPE = {
     PUBQUIZ:'pubquiz',ONEQUIZ:'onequiz',FUNQUIZ:'funquiz'}; */
 const GTYPE = {PUBQUIZ:'pubquiz'};
   
-var ActiveGameByName = new Object();    //list of all active games in play by id
+var ActiveGameByName = new Object();    //list of all active games in play by gamename
 var ActiveGameByCode = new Object();    //list of all accesscodes for active games
 //var Contestants = new Object();    //list of all contestants for active games
 
@@ -155,13 +155,8 @@ QMQ.prototype.testAns = function() {
   console.log("Test9: "+checkAnswer(g1,"man"));
 }
 
-QMQ.prototype.createTestApp = function(socket) {
-  const myobj = new QMApp("testapp","thecodecentre@gmail.com","url.com","1.1.1.1","hashpwd");
-  Dbt.createApp(myobj,socket);
-}
-
-QMQ.prototype.createQMaster = function(qm) {
-  const myobj = new QMaster(qm,"1.1.1.1");  // needs qm info plus ip address
+QMQ.prototype.createQMaster = function(qm,ipaddr) {
+  const myobj = new QMaster(qm,ipaddr);  // needs qm info plus ip address
   return myobj;
 }
 
@@ -188,6 +183,7 @@ QMQ.prototype.getActiveGame = function(gamename) {
   return(ActiveGameByName[gamename]);
 }
 
+// Superadmin debug onlu
 QMQ.prototype.getAllActiveGames = function() {
   let garray = [];
   Object.keys(ActiveGameByName).forEach(g => {
@@ -301,7 +297,7 @@ QMQ.prototype.getGameFromAccessCode = function(code) {
 QMQ.prototype.joinGame = function(game,contestant) {
     game.contestants.forEach(con => {
       if(con.cname == contestant.userid)   // username already exists
-        return(null);
+        return(false);
     }); // all good, username is unique
     let con = new QMContestant(contestant);
     game.contestants.push(con); // add this contestant to this game
@@ -317,17 +313,20 @@ QMQ.prototype.getGameFromToken = function(token) {
 
 // This returns the contestant object from the their token
 QMQ.prototype.getContestantFromToken = function(game,token) {
-/*   game.contestants.forEach(con => {   // find this contestant using his token and update the answer
-    console.log("saved token: "+con.token);
-    console.log("test token: "+token);
-    if(con.token == token) {
-      return(con);
-    }
-  }); */
   for(var i in game.contestants) {
     if(game.contestants[i].token == token) {
 //      console.log("test token: "+game.contestants[i].token);
       return(game.contestants[i]);
+    }
+  }
+  return(false);
+}
+
+// This removes the contestant object from the list
+QMQ.prototype.removeContestantUsingToken = function(game,token) {
+  for(var i in game.contestants) {
+    if(game.contestants[i].token == token) {
+      game.contestants.splice(i,1);   // remove from array
     }
   }
 }
@@ -346,17 +345,16 @@ QMQ.prototype.registerAnswer = function(game,ans) {
     return null;
   }
   console.log("Points: "+points);
-  game.contestants.forEach(con => {   // find this contestant using his token and update the answer
+ /*  game.contestants.forEach(con => {   // find this contestant using his token and update the answer
       if(con.token == ans.token) {
         con.answers[game.cqno] = ans.val;
         con.points[game.cqno] = points;
         con.totals += points;
       }
-
-  });
-  // game.contestants[ans.token].answers[game.cqno] = answer;
-  // game.contestants[ans.token].points[game.cqno] = points;
-  // game.contestants[ans.token].totals += points; // increment total points
+  }); */
+  game.contestants[ans.token].answers[game.cqno] = ans.val;
+  game.contestants[ans.token].points[game.cqno] = points;
+  game.contestants[ans.token].totals += points; // increment total points
   game.answers++;
   return(true);
 }
@@ -367,8 +365,8 @@ QMQ.prototype.getContestantPoints = function(game) {
   let result = [];
   for(var i in game.contestants) {
     let c = new Object();
-    c["cname"] = game.contestants[i].cname;
-    c["points"] = game.contestants[i].points[game.cqno];
+    c.cname = game.contestants[i].cname;
+    c.points = game.contestants[i].points[game.cqno];
     result.push(c);
   }
   return(result);
@@ -382,8 +380,8 @@ QMQ.prototype.getContestantScores = function(gname) {
   if(game) {
     for(var i in game.contestants) {
       let c = new Object();
-      c["cname"] = game.contestants[i].cname;
-      c["points"] = game.contestants[i].totals;
+      c.cname = game.contestants[i].cname;
+      c.points = game.contestants[i].totals;
       result.push(c);
     }
     return(result);

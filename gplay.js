@@ -39,6 +39,7 @@ function setDefaultValues() {
 	$('#game').hide();
 	$('#play').hide();
 	$('#scores').hide();
+	$('#users').show();
 	clearMessages();
 //	console.log("Doc ready");
 }
@@ -68,9 +69,10 @@ socket.on('startGameResponse',function(game) {
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
+	$('#users').hide();		// only required the first time to hide contentants who joined the game
 	if(qobject == "") {
-		$('#shscores').show();
 		clearMessages();
+		$('#shscores').show();
 		$('#question').hide();
 		$('#qanswer').val("");
 		$('#qimage').hide();
@@ -98,15 +100,23 @@ socket.on('getQuestionsResponse',function(qlist) {
 
 // This is called when a new contestant joins the game
 // con is an array of contestant names
-socket.on('contestantUpdate',function(con) {
+/* socket.on('contestantUpdate',function(con) {
 //	console.log("Contestants:"+con);
-	$('#users').text(Object.keys(con).length);
+	$('#numusers').text(Object.keys(con).length);
 	let ulist = "";
 	for(var i in con) {
 		ulist = ulist + con[i].cname +"<br/>";
 	}
 	$('#userlist').html(ulist);
-});
+
+	$('#users').empty();	// remove all old buttons (usernames)
+	for(var i in con) {		// start afresh with user list
+		var button = document.createElement('button');
+		button.innerText = con[i].cname;
+		button.className = "btn btn-primary";
+		document.getElementById('users').appendChild(button);
+	}
+}); */
 
 // This is called when a contestant submits an answer
 socket.on('answersUpdate',function(ans) {

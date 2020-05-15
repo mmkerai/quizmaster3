@@ -52,7 +52,7 @@
 					<th data-field="accesscode">Access Code</th>
 					<th data-field="questions">Question IDs</th>
 					<th data-field="timelimit">Time Limit</th>
-					<th data-field="operate" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
+					<th data-field="operate" data-width="150" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
 				</tr>
 				</thead>
 			</table>
@@ -89,6 +89,7 @@
 				<div class="form-group">
 					<div class="col-xs-3 col-xs-offset-3">
 						<button class="btn btn-success" onClick="setupGame()">Setup Game</button>
+						<button class="btn btn-warning" onClick="setPostLoginValues()">Cancel</button>
 					</div>
 					<div class="messages" id="setupgameerror"></div>
 				</div>

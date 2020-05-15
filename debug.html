@@ -43,7 +43,6 @@
 		</div>
 	</div>
 	<p>&nbsp;</p>
-	<div id="activegames"></div></br>
 	<div id="agtable">
 		<table
 			id="acgtable"
@@ -64,6 +63,26 @@
 				<th data-field="cqno">Current Qu No.</th>
 				<th data-field="contestants">Contestants</th>
 				<th data-field="answers">Answers</th>
+			</tr>
+			</thead>
+		</table>
+	</div>
+	<div id="autable">
+		<table
+			id="authutable"
+			class="table table-striped"
+			data-toggle="authutable"
+			data-height="448"
+			data-search="false"
+			data-pagination="true"
+			data-show-pagination-switch="true"
+			data-page-list="[10, 20, 30]"
+			data-side-pagination="server">
+			<thead class="thead-light">
+			<tr>
+				<th data-field="socketid">Socket</th>
+				<th data-field="userid">User ID</th>
+				<th data-field="username" data-sortable="true">User Name</th>
 			</tr>
 			</thead>
 		</table>

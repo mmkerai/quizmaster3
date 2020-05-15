@@ -25,9 +25,10 @@ function onSignInSuper(googleUser) {
 }
 
 function loadq() {
-	console.log("Loading Questions");
 	clearMessages();
-	socket.emit('loadQuestionsRequest',QM.qmid);
+	if(confirm('Are you sure you want to load questions? ')) {
+		socket.emit('loadQuestionsRequest',QM.qmid);
+	}
 }
 
 function reviewq() {
@@ -74,7 +75,6 @@ function setDefaultValues() {
 
 function setPostLoginValues() {
 	$('#gameplay').show();
-
 }
 
 function actionFormatter(value, row, index) {

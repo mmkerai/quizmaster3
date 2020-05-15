@@ -7,14 +7,14 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.8";
+const version = "QM v0.9";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var auth2; // The Sign-In object.
 var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');
 var qcountsound = new Audio('audio/questionwait.mp3');
-
+var newcontestantsound = new Audio('audio/smsalert3.mp3');
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
  */
@@ -274,6 +274,27 @@ socket.on('announcement',function(message) {
 	$('#qheader').text(message);
 });
 
+// This is called when a new contestant joins the game
+// con is an array of contestant names
+socket.on('contestantUpdate',function(con) {
+	//	console.log("Contestants:"+con);
+		newcontestantsound.play();
+		$('#numusers').text(Object.keys(con).length);
+		let ulist = "";
+		for(var i in con) {
+			ulist = ulist + con[i].cname +"<br/>";
+		}
+		$('#userlist').html(ulist);
+	
+		$('#users').empty();	// remove all old buttons (usernames)
+		for(var i in con) {		// start afresh with user list
+			var button = document.createElement('button');
+			button.innerText = con[i].cname;
+			button.className = "btn btn-primary";
+			document.getElementById('users').appendChild(button);
+		}
+	});
+	
 socket.on('timeUpdate',function(message) {
 //	$('#timer').text(message);
 	if(message == 0) {

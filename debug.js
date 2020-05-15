@@ -16,6 +16,13 @@ function onSignInSuper(googleUser) {
 	clearMessages();
 }
 
+function viewau() {
+	if(isEmpty(QM))	return($('#error').text("You need to login first"));
+	clearMessages();
+	console.log("Getting active users");
+	socket.emit('getActiveUsersRequest',QM.qmid);	
+}
+
 function viewag() {
 	if(isEmpty(QM))	return($('#error').text("You need to login first"));
 	clearMessages();
@@ -43,8 +50,17 @@ socket.on('loginSuperResponse', function(userinfo) {
 socket.on('getActiveGamesResponse', function(glist) {
 	console.log(glist);
 	$('#agtable').show();
+	$('#autable').hide();
 	$table.bootstrapTable({data: glist});
 	$table.bootstrapTable('load', glist);
+});
+
+socket.on('getActiveUsersResponse', function(glist) {
+	console.log(glist);
+	$('#autable').show();
+	$('#agtable').hide();
+	$('#authutable').bootstrapTable({data: glist});
+	$('#authutable').bootstrapTable('load', glist);
 });
 
 function setDefaultValues() {
@@ -54,6 +70,7 @@ function setDefaultValues() {
 	$('#signoutbutton').hide();
 	$('#signinbutton').show();
 	$('#agtable').hide();
+	$('#autable').hide();
 	clearMessages();
 	console.log("Doc ready");
 }

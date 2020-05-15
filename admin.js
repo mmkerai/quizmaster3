@@ -66,7 +66,7 @@ function getqs() {
 
 function newgame() {
 	if(!QM) return($('#error').text("You need to login first"));
-
+ 
 	$('#newgame').show();
 	$('#gtable').hide();
 	socket.emit('getCatsRequest',QM.qmid);
@@ -76,6 +76,7 @@ function newgame() {
 
 function setupGame() {
 //	console.log("Creating New Game");
+	clearMessages();
 	let newg = new Object();
 	newg.qmid = QM.qmid;
 	newg.gamename = $('#qmgname').val();
@@ -152,6 +153,7 @@ window.operateEvents = {
 		window.open("gplay.html?gameid="+row.gamename, '_blank');
     },
     'click .edit': function (e, value, row, index) {
+		socket.emit('getGameTypesRequest',QM.qmid);
 		$('#newgame').show();
 		$('#gtable').hide();
 		$('#qmgname').val(row.gamename);

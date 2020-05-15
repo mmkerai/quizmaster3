@@ -43,7 +43,7 @@ DB.prototype.newQMaster = function(qmobj,callback) {
 DB.prototype.checkQMaster = function(uid,callback) {
   CollQmasters.find({qmid: uid}).toArray(function(err,result) {
     if (err) throw err;
-    if(result.length)
+    if(typeof result != "undefined" && result.length > 0)
       callback(true);
     else
       callback(false);
