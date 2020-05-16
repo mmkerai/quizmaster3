@@ -344,18 +344,15 @@ QMQ.prototype.registerAnswer = function(game,ans) {
     console.log("answer received too late");
     return null;
   }
-  console.log("Points: "+points);
- /*  game.contestants.forEach(con => {   // find this contestant using his token and update the answer
+//  console.log("Points: "+points);
+  game.contestants.forEach(con => {   // find this contestant using his token and update the answer
       if(con.token == ans.token) {
         con.answers[game.cqno] = ans.val;
         con.points[game.cqno] = points;
         con.totals += points;
       }
-  }); */
-  game.contestants[ans.token].answers[game.cqno] = ans.val;
-  game.contestants[ans.token].points[game.cqno] = points;
-  game.contestants[ans.token].totals += points; // increment total points
-  game.answers++;
+  });
+  
   return(true);
 }
 
@@ -401,7 +398,7 @@ QMQ.prototype.endOfGame = function(name) {
 // e.g. if answer is cat then there must be an exact match
 // if answer is mangosteen then up to 4 spelling errors are allowed
 function checkAnswer(game,ans) {
-  console.log("Ans is: "+ans);
+//  console.log("Ans is: "+ans);
   let q = game.questions[game.cqno];
   let dlmax = q.answer.length;
   let dldist = dlevenshtein(q.answer.toLowerCase(),ans.toLowerCase());
@@ -411,7 +408,7 @@ function checkAnswer(game,ans) {
     (q.type!='number' && dlmax > 3 && dldist < dlmax/2))
     {
       let response = new Date() - game.qstarttime;  // in milliseconds
-      console.log("response time is: "+response);
+//      console.log("response time is: "+response);
       let maxt = game.timelimit * 1000;   // convert to milliseconds
       if(response > maxt)   // shouldnt happen
         return -1;

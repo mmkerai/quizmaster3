@@ -381,10 +381,10 @@ io.on('connection',function(socket) {
 // called by quizmaster to show latest scores
   socket.on('showScoresRequest',function(qmid,gname) {
     if(!validUser(socket.id,qmid)) return;
-//    let scores = [];
     let scores = qmt.getContestantScores(gname);   // current scores
-/* // Test to see how score is displayed
-    for(var i=0; i < 3; i++) {
+// Test to see how score is displayed
+/*     let scores = [];
+    for(var i=0; i < 4; i++) {
       let c = new Object();
       c["cname"] = "con"+i;
       c["points"] = Math.random() * 100;
@@ -466,6 +466,7 @@ io.on('connection',function(socket) {
 //    console.log("Reg answer: "+ans.val+" for "+ans.token);
     let game = qmt.getGameFromToken(ans.token);
     if(game) {
+      game.answers++;   // keep tab of how many answers submitted
       if(status = qmt.registerAnswer(game,ans)) {
       socket.emit("submitAnswerResponse","Answer registered: "+ans.val);
       io.in(game.gamename).emit('answersUpdate',game.answers);
@@ -530,7 +531,7 @@ function loadquestions(file,socket) {
 
 // `Check if socket is from a valid user
 function validUser(sock,qmid) {
-  if(AUTHUSERS[sock].qmid)    // check not null otherwise it crashes
+  if(typeof(AUTHUSERS[sock] != 'undefined'))    // check not undefined otherwise it crashes
     if(AUTHUSERS[sock].qmid == qmid) return(true);
 
   socket.emit("errorResponse","Please login");

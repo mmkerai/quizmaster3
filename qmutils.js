@@ -327,6 +327,7 @@ socket.on('endOfGame', function() {
 	deleteCookie("quizmaster");
 });
 
+var scores;
 socket.on('scoresUpdate',function(cpoints) {
 	$('#scores').show();
 	var cons = [];
@@ -338,7 +339,7 @@ socket.on('scoresUpdate',function(cpoints) {
 	var ctx = $('#scores');
 	Chart.defaults.global.animation.duration = 3000;
 	Chart.defaults.global.legend.position = "bottom";
-	var scores = new Chart(ctx, {
+	var cconfig = {
 		type: 'horizontalBar',
 		data: {
 			labels: cons,
@@ -353,13 +354,22 @@ socket.on('scoresUpdate',function(cpoints) {
 				borderWidth: 2
 			}]
 		},
-		options: { title: {
+		options: {
+			scales: {
+				xAxes: [{
+					ticks: {
+				  	beginAtZero: true
+					}
+			  	}]
+			}
+		}
+/* 		options: {title: {
 			display: true,
 			fontSize: 16,
             text: 'Scores'},
 			scales: {
 				yAxes: [{
-					display: true,
+ 					display: true,
 					gridLines: {
 						display: false
 					},
@@ -368,14 +378,21 @@ socket.on('scoresUpdate',function(cpoints) {
 						fontSize: 16,
 						fontStyle: "oblique",
 						labelString: 'Contestant'
-					},
+					}, 
 					ticks: {
 						beginAtZero: true
 					}
 				}]
 			}
-		}
-	});
+		} */
+	};
+	if(scores != undefined) {
+		scores.config = cconfig;
+		scores.update();
+	}
+	else {
+		scores = new Chart(ctx, cconfig);
+	}
 });
 
 /* function getUserInfo(user) {
