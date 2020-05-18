@@ -76,13 +76,13 @@ DB.prototype.updateQuestion = function(qobj,callback) {
     },
     function(err, res) {
       if (err) throw err;
-      if(res.length) {
-        console.log("question updated:" +JSON.stringify(res));
+//      console.log("Update question response: " +JSON.stringify(res));
+      if(res.modifiedCount == 1) {
         callback(true);
       }
       else
         callback(false);
-  });
+    });
 }
 
 // Gets total number of questions
