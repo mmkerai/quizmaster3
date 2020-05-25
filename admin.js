@@ -18,20 +18,6 @@ $(document).ready(function() {
 	});
 });
  */
-$(function() {
-    $('#myselect').click(function () {
-		var qids = "";
-		var ids=$table.bootstrapTable('getSelections');
-//		JSON.stringify(ids);
-		ids.forEach(function(item,index) {
-//			console.log("QID: " +item.qid);
-			qids = item.qid +","+qids;
-		});
-		console.log("QIDs: " +qids);
-		var str = $("#qmgquestions").val();		// get existing list of questions
-		$("#qmgquestions").val(str+qids);		// add new selected questions
-	});
-});
 
 /* $(function() {
     $gmtable.click(function () {
@@ -49,23 +35,22 @@ function responseHandler(res) {
 
 function chooseq() {
 	if(!QM) return($('#error').text("You need to login first"));
-
-	$('#qselect').show();
+	createNewNavTab("Questions","q-tab","#questions");
+	$("#q-tab").click();
+	$("#qlist").text($("#qmgquestions").val());
 	socket.emit('getCatsRequest',QM.qmid);
 }
 
 function getqs() {
 	if(!QM) return($('#error').text("You need to login first"));
 	var cat = $('#qcat').val();
-	console.log("Getting Questions for category: "+cat);
-	$('#qtable').show();
-	$('#myselect').show();
+//	console.log("Getting Questions for category: "+cat);
 	socket.emit('getQuestionsByCatRequest',QM.qmid,cat);	
 }
 
 function newgame() {
 	if(!QM) return($('#error').text("You need to login first"));
-	createNewNavTab("Setup New Quiz","setup-tab","#setup");
+	createNewNavTab("Setup Quiz","setup-tab","#setup");
 	$("#setup-tab").click();
 	socket.emit('getCatsRequest',QM.qmid);
 	socket.emit('getDiffsRequest',QM.qmid);
@@ -85,17 +70,33 @@ function setupGame() {
 	socket.emit('newGameRequest',QM.qmid,newg);
 }
 
+function myselect() {
+	var qids = "";
+	var ids=$table.bootstrapTable('getSelections');
+	ids.forEach(function(item,index) {
+//			console.log("QID: " +item.qid);
+		qids = item.qid +","+qids;
+	});
+//		console.log("QIDs: " +qids);
+	var str = $("#qmgquestions").val();		// get existing list of questions
+	if(str.charAt(str.length-1) != ',')		// if last char isnt a , the add it
+		str = str + ',';
+	$("#qlist").text(str+qids);				// show on questions tab
+	$("#qmgquestions").val(str+qids);		// add new selected questions
+}
+
 socket.on('getGamesResponse',function(glist) {
 //	console.log(glist);
+$()
   	$('#gamestable').bootstrapTable({data: glist});
 	$('#gamestable').bootstrapTable('load', glist);
 });
 
 socket.on('newGameResponse',function(msg) {
 	clearMessages();
-	$('#message1').text(msg);
-	socket.emit("getGamesRequest",QM.qmid);
 	cancelSetup();
+	socket.emit("getGamesRequest",QM.qmid);
+	$('#message1').text(msg);
 });
 
 socket.on('deleteGameResponse',function(msg) {
@@ -113,9 +114,6 @@ function setDefaultValues() {
 	$('#myTabContent').hide();
 	$('#adminmsg').show();
 	$('#qtable').hide();
-	// $('#newgame').hide();
-	// $('#myselect').hide();
-	// $('#gtable').hide();
 	clearMessages();
 }
 
@@ -136,6 +134,10 @@ function cancelSetup() {
 	$('#setup-tab').remove();
 }
 
+function cancelQSelect() {
+	$('#setup-tab').click();
+	$('#q-tab').remove();
+}
 function actionFormatter(value, row, index) {
     return [
       '<a class="play" href="javascript:void(0)" title="Start Play">',
@@ -171,8 +173,9 @@ window.operateEvents = {
     },
     'click .edit': function (e, value, row, index) {
 		socket.emit('getGameTypesRequest',QM.qmid);
+		createNewNavTab("Edit Quiz","setup-tab","#setup");
+		$("#setup-tab").click();
 		$('#newgame').show();
-		$('#gtable').hide();
 		$('#qmgname').val(row.gamename);
 		$('#qmgquestions').val(row.questions);
 	 	$('#qmgtime').val(row.timelimit);

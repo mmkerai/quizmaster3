@@ -232,7 +232,7 @@ io.on('connection',function(socket) {
 
   socket.on('getQuestionsByCatRequest',function(uid,cat) {
     if(!validUser(socket,uid)) return;
-    console.log("Getting questions for category: "+cat+" for "+AUTHUSERS[socket.id].name);
+//    console.log("Getting questions for category: "+cat+" for "+AUTHUSERS[socket.id].name);
     dbt.getQuestionsByCat(cat, function(qlist) {
       if(qlist.length > 0)
         socket.emit('getQuestionsResponse',qlist);
