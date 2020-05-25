@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Quizmaster</title>
+	<link rel="icon" href="images/order.ico">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com">
+	<script src="test.js"></script>
+	<link rel="stylesheet" href="quizmaster.css"/>
+</head>
+<body>
+<div class="container theme-showcase" role="main">
+	<div class="well">
+		<h3>Quizmaster</h3>
+		<h5><span id="version" class="pull-left"></span></h5>
+        <div class="pull-right">
+            <img id="userimg" width="40" height="40"/>&nbsp;<b><span id="username"></span></b>&nbsp;
+            <button class="btn btn-success btn-sm" id="signoutbutton" onclick="signOut()">Sign out</button>
+        </div>
+    <p>&nbsp;</p>
+    </div>
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" id="admin-tab" data-toggle="tab" href="#admin" role="tab">Admin</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="play-tab" data-toggle="tab" href="#play" role="tab">Play</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="setup-tab" data-toggle="tab" href="#setup" role="tab">Setup</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="signin-tab" data-toggle="tab" href="#signin" role="tab">Sign-in</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="home-tab">This is admin stuff<br/>
+            1<br/>
+            2<br/>
+            3<br/>            
+        </div>
+        <div class="tab-pane fade" id="play" role="tabpanel" aria-labelledby="play-tab">This is play stuff</div>
+        <div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">This is setup stuff</div>
+        <div class="tab-pane fade" id="signin" role="tabpanel" aria-labelledby="signin-tab">
+            <div id='menu' class="button-group">
+                <span id="signinbutton" class="g-signin2" data-width="200" data-height="40" data-longtitle="true" data-onsuccess="onSignIn" data-theme="dark"></span>
+            </div>
+        </div>
+    </div>
+	<p class="messages" id="error"></p>
+	<p class="messages" id="message1"></p>
+</div>
+</body>
+</html>

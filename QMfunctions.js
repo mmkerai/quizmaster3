@@ -388,8 +388,8 @@ QMQ.prototype.getContestantScores = function(gname) {
 // Games finished - housekeeping 
 QMQ.prototype.endOfGame = function(name) {
   let game = ActiveGameByName[name];
-  delete ActiveGameByName[name];
   delete ActiveGameByCode[game.accesscode];
+  delete ActiveGameByName[name];
 }
 
 // check if answer received is correct if so calc points based on time

@@ -1,13 +1,13 @@
 //var socket = io.connect();
 var socket = io('', {
 	'reconnection': true,
-    'reconnectionDelay': 1000,
+    'reconnectionDelay': 5000,
     'reconnectionAttempts': 5
 });
 
 var $table;
 
-const version = "QM v0.9";
+const version = "QM v0.91";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var auth2; // The Sign-In object.
@@ -18,87 +18,87 @@ var newcontestantsound = new Audio('audio/smsalert3.mp3');
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
  */
-var appStart = function() {
-	gapi.load('auth2', initSigninV2);
-  };
+// var appStart = function() {
+// 	gapi.load('auth2', initSigninV2);
+//   };
   
 /**
  * Initializes Signin v2 and sets up listeners.
  */
-var initSigninV2 = function() {
-	auth2 = gapi.auth2.init({
-		client_id: GOOGLE_CLIENT_ID,
-		scope: 'profile'
-	});
+// var initSigninV2 = function() {
+// 	auth2 = gapi.auth2.init({
+// 		client_id: GOOGLE_CLIENT_ID,
+// 		scope: 'profile'
+// 	});
 
-	// Listen for sign-in state changes.
-	auth2.isSignedIn.listen(signinChanged);
+// 	// Listen for sign-in state changes.
+// 	auth2.isSignedIn.listen(signinChanged);
 
-	// Listen for changes to current user.
-	auth2.currentUser.listen(userChanged);  
+// 	// Listen for changes to current user.
+// 	auth2.currentUser.listen(userChanged);  
 
-	// Sign in the user if they are currently signed in.
-	if (auth2.isSignedIn.get() == true) {
-		auth2.signIn();
-	}
+// 	// Sign in the user if they are currently signed in.
+// 	if (auth2.isSignedIn.get() == true) {
+// 		auth2.signIn();
+// 	}
 
-	// Start with the current live values.
-	refreshValues();
-}
-/**
- * Listener method for sign-out live value.
- * @param {boolean} val the updated signed out state.
- */
-var signinChanged = function(val) {
-	console.log('Signin state changed to ', val);
-}
+// 	// Start with the current live values.
+// 	refreshValues();
+// }
+// /**
+//  * Listener method for sign-out live value.
+//  * @param {boolean} val the updated signed out state.
+//  */
+// var signinChanged = function(val) {
+// 	console.log('Signin state changed to ', val);
+// }
 
-/**
- * Listener method for when the user changes.
- *
- * @param {GoogleUser} user the updated user.
- */
-var userChanged = function (user) {
-	console.log('User now: ', user);
-	googleUser = user;
-	updateGoogleUser();
-	document.getElementById('curr-user-cell').innerText =
-	  JSON.stringify(user, undefined, 2);
-  };
+// /**
+//  * Listener method for when the user changes.
+//  *
+//  * @param {GoogleUser} user the updated user.
+//  */
+// var userChanged = function (user) {
+// 	console.log('User now: ', user);
+// 	googleUser = user;
+// 	updateGoogleUser();
+// 	document.getElementById('curr-user-cell').innerText =
+// 	  JSON.stringify(user, undefined, 2);
+//   };
 
-  /**
- * Updates the properties in the Google User table using the current user.
- */
-var updateGoogleUser = function () {
-/* 	if (googleUser) {
-		document.getElementById('user-id').innerText = googleUser.getId();
-		document.getElementById('user-scopes').innerText =
-		googleUser.getGrantedScopes();
-		document.getElementById('auth-response').innerText =
-		JSON.stringify(googleUser.getAuthResponse(), undefined, 2);
-	} else {
-		document.getElementById('user-id').innerText = '--';
-		document.getElementById('user-scopes').innerText = '--';
-		document.getElementById('auth-response').innerText = '--';
-	} */
-};
+//   /**
+//  * Updates the properties in the Google User table using the current user.
+//  */
+// var updateGoogleUser = function () {
+// /* 	if (googleUser) {
+// 		document.getElementById('user-id').innerText = googleUser.getId();
+// 		document.getElementById('user-scopes').innerText =
+// 		googleUser.getGrantedScopes();
+// 		document.getElementById('auth-response').innerText =
+// 		JSON.stringify(googleUser.getAuthResponse(), undefined, 2);
+// 	} else {
+// 		document.getElementById('user-id').innerText = '--';
+// 		document.getElementById('user-scopes').innerText = '--';
+// 		document.getElementById('auth-response').innerText = '--';
+// 	} */
+// };
 
-/**
- * Retrieves the current user and signed in states from the GoogleAuth
- * object.
- */
-var refreshValues = function() {
-	if (auth2){
-		console.log('Refreshing values...');
-		googleUser = auth2.currentUser.get();
+// /**
+//  * Retrieves the current user and signed in states from the GoogleAuth
+//  * object.
+//  */
+// var refreshValues = function() {
+// 	if (auth2){
+// 		console.log('Refreshing values...');
+// 		googleUser = auth2.currentUser.get();
 
-		document.getElementById('curr-user-cell').innerText =
-		JSON.stringify(googleUser, undefined, 2);
-		document.getElementById('signed-in-cell').innerText =
-		auth2.isSignedIn.get();
-		updateGoogleUser();
-	}
-}
+// 		document.getElementById('curr-user-cell').innerText =
+// 		JSON.stringify(googleUser, undefined, 2);
+// 		document.getElementById('signed-in-cell').innerText =
+// 		auth2.isSignedIn.get();
+// 		updateGoogleUser();
+// 	}
+// }
 
 function onRegister(googleUser) {
 	var profile = googleUser.getBasicProfile();
@@ -124,7 +124,7 @@ function signOut() {
 	auth2.signOut().then(function () {
 		console.log('User signed out.');
 		socket.emit('logoutRequest',"");
-		setDefaultValues();
+		location.reload();
 	});
 }
 
@@ -395,10 +395,20 @@ socket.on('scoresUpdate',function(cpoints) {
 	}
 });
 
-/* function getUserInfo(user) {
-	clearMessages();
-	socket.emit('getUserInfoRequest',user.uid);
-} */
+// Create a new nav tab and navigate to it
+function createNewNavTab(label,id,link) {
+	var node = document.createElement("LI");	// Create a <li> node
+    node.setAttribute("class","nav-item");
+	var anc = document.createElement("a");	// Create a <a> node
+	anc.innerText = label;
+    anc.setAttribute("class","nav-link");
+    anc.setAttribute("id",id);
+    anc.setAttribute("data-toggle","tab");
+    anc.setAttribute("href",link);
+    anc.setAttribute("role","tab");
+	node.appendChild(anc);
+	document.getElementById("mynavtabs").appendChild(node);
+}
 
 function showCountdown() {
 	document.getElementById("timer").style.display = "block";

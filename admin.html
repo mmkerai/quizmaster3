@@ -29,104 +29,114 @@
 			</div>
 			<p>&nbsp;</p>
 		</div>
-		<p class="messages" id="error"></p>
-		<p class="messages" id="message1"></p>
-		<div class="button-group">
-				<button type="button" id="signinbutton" class="g-signin2" data-width="200" data-height="30" data-longtitle="true" data-onsuccess="onSignIn" data-theme="dark"></button>
-				<button type="button" id="registerlabel" class="btn btn-danger" onclick="location.href='register.html';">Register</button>
-		</div>
 		<div id="adminmsg">
-			<p>&nbsp;</p>
-			<p class="messages2">Sign in to start your quiz or register with your gmail<p>
-		</div>
-		<p class="messages2" id="yourgames">Your Quizes&nbsp;<img src="images/plus.png" title="Create New" width="32" height="32" onclick="newgame()"/></p>
-		<div id="gtable">
-			<table id="gamestable"
-				class="table table-striped"
-				data-toggle="gamestable"
-				data-side-pagination="server">
-				<thead class="thead-light">
-				<tr>
-					<th data-field="gamename">Game Name</th>
-					<th data-field="gametype">Game Type</th>
-					<th data-field="accesscode">Access Code</th>
-					<th data-field="questions">Question IDs</th>
-					<th data-field="timelimit">Time Limit</th>
-					<th data-field="operate" data-width="150" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
-				</tr>
-				</thead>
-			</table>
-		</div>
-		<div id="newgame">
-			<div class="form-horizontal col-xs-9 col-xs-offset-3">
-				<div class="form-group">
-					<label class="control-label col-xs-3">Game or event name</label>
-					<div class="col-xs-3">
-						<input class="form-control" type="text" id="qmgname"/>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="control-label col-xs-3">Game type</label>
-					<div class="col-xs-3">
-						<select class="form-control" id="qmgtype"></select>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="control-label col-xs-3">Time per question (s)</label>
-					<div class="col-xs-3">
-						<input class="form-control" type="text" id="qmgtime" value="20"/>
-					</div>
-				</div>
-				<div class="form-group">
-					<label class="control-label col-xs-3">List of question ids</label>
-					<div class="col-xs-3">
-						<input class="form-control" type="text" id="qmgquestions"/>
-					</div>
-					<div class="col-xs-2">
-						<button class="btn btn-warning" onClick="chooseq()">Choose Questions</button>
-					</div>
-				</div>	
-				<div class="form-group">
-					<div class="col-xs-3 col-xs-offset-3">
-						<button class="btn btn-success" onClick="setupGame()">Setup Game</button>
-						<button class="btn btn-warning" onClick="setPostLoginValues()">Cancel</button>
-					</div>
-					<div class="messages" id="setupgameerror"></div>
-				</div>
-			</div>
-			<div id="qselect">
-				<!-- <form id="qselectform" class="inputform"> -->
-					Category<select id="qcat"></select>
-					<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
-				<!-- </form> -->
+			<p class="messages2">Sign in to start quizzing or register with your gmail</p>
+			<div id='menu' class="button-group">
+				<button id="signinbutton" class="g-signin2" data-width="200" data-height="30" data-longtitle="true" data-onsuccess="onSignIn" data-theme="dark"></button>
+				&nbsp;or&nbsp;
+				<button type="button" class="btn btn-warning" onclick="location.href='register.html';">Register</button>
 			</div>
 		</div>
-		<div id="qtable">
-			<div id="toolbar">
-				<button class="btn btn-warning" id='myselect'>Add selected to game</button>
+		<ul id="mynavtabs" class="nav nav-tabs">
+			<li class="nav-item">
+			  <a class="nav-link active" id="admin-tab" data-toggle="tab" href="#admin" role="tab">Admin</a>
+			</li>
+		</ul>
+		<div class="tab-content" id="myTabContent">
+			<div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+				<p>&nbsp;</p>
+				<p class="messages2" id="yourgames">Your Quizes&nbsp;
+					<button class="btn btn-info btn-sm" id="newgame" onclick="newgame()">+ New</button>
+				<div id="gtable">
+					<table id="gamestable"
+						class="table table-striped"
+						data-toggle="gamestable"
+						data-side-pagination="server">
+						<thead class="thead-light">
+						<tr>
+							<th data-field="gamename">Game Name</th>
+							<th data-field="gametype">Game Type</th>
+							<th data-field="accesscode">Access Code</th>
+							<th data-field="questions">Question IDs</th>
+							<th data-field="timelimit">Time Limit</th>
+							<th data-field="operate" data-width="150" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
 			</div>
-			<table id="btable"
-				class="table table-striped"
-				data-toggle="btable"
-				data-height="384"
-				data-search="true"
-				data-pagination="true"
-				data-page-list="[10, 20, 30]"
-				data-click-to-select="true">
-				<thead class="thead-light">
-				<tr>
-					<th data-field="state" data-checkbox="true"></th>
-					<th data-field="qid">ID</th>
-					<th data-field="category" data-sortable="true">Category</th>
-					<th data-field="subcategory" data-sortable="true">Subcategory</th>
-					<th data-field="difficulty" data-sortable="true">Difficulty</th>
-					<th data-field="type" data-sortable="true">Type</th>
-					<th data-field="question">Question</th>
-					<th data-field="answer">Answer</th>
-					<th data-field="imageurl">Image URL</th>
-				</tr>
-				</thead>
-			</table>
+			<div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
+				<p>&nbsp;</p>
+				<div class="form-horizontal col-xs-9 col-xs-offset-3">
+					<div class="form-group">
+						<label class="control-label col-xs-3">Game or event name</label>
+						<div class="col-xs-3">
+							<input class="form-control" type="text" id="qmgname"/>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-xs-3">Game type</label>
+						<div class="col-xs-3">
+							<select class="form-control" id="qmgtype"></select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-xs-3">Time per question (s)</label>
+						<div class="col-xs-3">
+							<input class="form-control" type="text" id="qmgtime" value="20"/>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-xs-3">List of question ids</label>
+						<div class="col-xs-3">
+							<input class="form-control" type="text" id="qmgquestions"/>
+						</div>
+						<div class="col-xs-2">
+							<button class="btn btn-warning" onClick="chooseq()">Choose Questions</button>
+						</div>
+					</div>	
+					<div class="form-group">
+						<div class="col-xs-3 col-xs-offset-3">
+							<button class="btn btn-success" onClick="setupGame()">Setup Game</button>
+							<button class="btn btn-warning" onClick="cancelSetup()">Cancel</button>
+						</div>
+						<div class="messages" id="setupgameerror"></div>
+					</div>
+				</div>
+					<div id="qselect">
+						<!-- <form id="qselectform" class="inputform"> -->
+							Category<select id="qcat"></select>
+							<button class="btn btn-warning" onClick='getqs()'>Get Questions</button>
+						<!-- </form> -->
+					</div>
+				<div id="qtable">
+					<div id="toolbar">
+						<button class="btn btn-warning" id='myselect'>Add selected to quiz</button>
+					</div>
+					<table id="btable"
+						class="table table-striped"
+						data-toggle="btable"
+						data-height="384"
+						data-search="true"
+						data-pagination="true"
+						data-page-list="[10, 20, 30]"
+						data-click-to-select="true">
+						<thead class="thead-light">
+						<tr>
+							<th data-field="state" data-checkbox="true"></th>
+							<th data-field="qid">ID</th>
+							<th data-field="category" data-sortable="true">Category</th>
+							<th data-field="subcategory" data-sortable="true">Subcategory</th>
+							<th data-field="difficulty" data-sortable="true">Difficulty</th>
+							<th data-field="type" data-sortable="true">Type</th>
+							<th data-field="question">Question</th>
+							<th data-field="answer">Answer</th>
+							<th data-field="imageurl">Image URL</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
 		</div>
 	</div>
 </body>

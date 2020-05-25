@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
+io.set('heartbeat timeout',20000);
 const db = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 //require('@google-cloud/debug-agent').start();
@@ -54,13 +55,13 @@ console.log("Server started on port "+PORT);
 
 // Set up socket actions and responses
 io.on('connection',function(socket) {
-  AUTHUSERS[socket.id] = 999;   // initialise with a number
+//  AUTHUSERS[socket.id] = 999;   // initialise with a number
   SUPERUSERS[socket.id] = 999;   // initialise with a number
   const clientIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
-  console.log("Client IP is: "+clientIp);
+//  console.log("Client IP is: "+clientIp);
 
-  socket.on('disconnect',function () {
-    removeSocket(socket.id,"disconnect");
+  socket.on('disconnect',function (reason) {
+    removeSocket(socket.id,"disconnect: "+reason);
   });
 
   socket.on('end',function() {
@@ -172,7 +173,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getUserInfoRequest',function(uid) {
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     dbt.getUserInfo(uid,function(uinfo) {
       socket.emit('getUserInfoResponse',uinfo);
     });
@@ -188,33 +189,33 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getCatsRequest',function(uid){
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     let qcat = qmt.getCategories();
  //   console.log("Categories are: "+JSON.stringify(qcat));
 		socket.emit('getCatsResponse',qcat);
   });
 
   socket.on('getSubcatsRequest',function(uid,cat){
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
 //    console.log("Get subcats for "+cat);
     let qsubcat = qmt.getSubCategories(cat);
 		socket.emit('getSubcatsResponse',qsubcat);
   });
 
   socket.on('getDiffsRequest',function(uid){
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     let qdiff = qmt.getDifficulties();
 		socket.emit('getDiffsResponse',qdiff);
   });
 
   socket.on('getQuestionTypesRequest',function(uid){
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     let qtype = qmt.getQuestionTypes();
 		socket.emit('getQuestionTypesResponse',qtype);
   });
 
   socket.on('getGameTypesRequest',function(uid) {
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     let gtype = qmt.getGameTypes();
 		socket.emit('getGameTypesResponse',gtype);
   });
@@ -230,7 +231,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getQuestionsByCatRequest',function(uid,cat) {
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
     console.log("Getting questions for category: "+cat+" for "+AUTHUSERS[socket.id].name);
     dbt.getQuestionsByCat(cat, function(qlist) {
       if(qlist.length > 0)
@@ -241,7 +242,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getQuestionByIdRequest',function(uid,qid) {
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
 //    console.log("Getting question with ID: "+qid);
     dbt.getQuestionById(qid,function(qm) {
       if(qm.length > 0) //make sure question id was valid
@@ -252,7 +253,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('updateQuestionRequest',function(uid,qobj) {
-    if(!validUser(socket.id,uid)) return;
+    if(!validUser(socket,uid)) return;
 //    console.log("Updating question with ID: "+qobj.qid);
     dbt.updateQuestion(qobj,function(status) {
       if(status)
@@ -263,7 +264,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('getGamesRequest',function(qmid) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     console.log("Getting Games for: "+qmid);
     dbt.getGames(qmid,function(games) {
       if(games.length > 0) {
@@ -279,7 +280,7 @@ io.on('connection',function(socket) {
 // this event is used to prepare for game start.
 // Needs to be called before starting play so players can join.
   socket.on('preGameStartRequest',function(qmid,gname) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     
     qmt.gameReady(qmid,gname,function(game) {
       if(!game)
@@ -298,7 +299,7 @@ io.on('connection',function(socket) {
   });
 
   socket.on('newGameRequest',function(qmid,game) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     if(!qmt.checkGameTypes(game.gametype))
       return(socket.emit("gameSetupErrorResponse","Invalid Game Type"));
     if(game.gamename.length < 6)
@@ -343,7 +344,7 @@ io.on('connection',function(socket) {
 
   // called by quizmaster to delete a game
   socket.on('deleteGameRequest',function(qmid,game) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     dbt.deleteGame(game, function (status) {
       if(status)  // all good
         socket.emit("deleteGameResponse","Game deleted: "+game.gamename);
@@ -354,7 +355,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to start a game
   socket.on('startGameRequest',function(qmid,gameid) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     let game = qmt.getActiveGame(gameid);
     if(game) {
       socket.emit("startGameResponse",game);
@@ -367,7 +368,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to show next question
   socket.on('nextQuestionRequest',function(qmid,gameid) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     let game = qmt.getActiveGame(gameid);
     if(game) {
       game.cqno++;
@@ -380,7 +381,7 @@ io.on('connection',function(socket) {
 
 // called by quizmaster to show latest scores
   socket.on('showScoresRequest',function(qmid,gname) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     let scores = qmt.getContestantScores(gname);   // current scores
 // Test to see how score is displayed
 /*     let scores = [];
@@ -400,10 +401,10 @@ io.on('connection',function(socket) {
 
   // called by quizmaster to end the game
   socket.on('endGameRequest',function(qmid,gamename) {
-    if(!validUser(socket.id,qmid)) return;
+    if(!validUser(socket,qmid)) return;
     qmt.endOfGame(gamename); //housekeeping
     io.in(gamename).emit('announcement','Quizmaster has ended the game!');
-    socket.emit("endGameResponse","");
+    socket.emit("endGameResponse",gamename);
   });
 
 // used by contestant to join game so no login/auth required
@@ -501,7 +502,7 @@ io.on('connection',function(socket) {
 /* Functions below this point
 ********************************************/
 function removeSocket(id,evname) {
-//		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
+		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
     delete AUTHUSERS[id];
 }
 
@@ -531,10 +532,13 @@ function loadquestions(file,socket) {
 
 // `Check if socket is from a valid user
 function validUser(sock,qmid) {
-  if(typeof(AUTHUSERS[sock] != 'undefined'))    // check not undefined otherwise it crashes
-    if(AUTHUSERS[sock].qmid == qmid) return(true);
+  // console.log("QMid: "+qmid);
+  // console.log("Socket: "+JSON.stringify(AUTHUSERS[sock.id]));
+  if(typeof AUTHUSERS[sock.id] !== 'undefined') {   // check not undefined otherwise it crashes
+    if(AUTHUSERS[sock.id].qmid == qmid) return(true);
+  }
 
-  socket.emit("errorResponse","Please login");
+  sock.emit("errorResponse","Please login");
   return(false);
 }
 

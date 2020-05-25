@@ -1,13 +1,17 @@
 /*
 *	Quizmaster play game
 */
-var QM = new Object();
-var Questions = [];
-const gid = getURLParameter("gameid");
+// var QM = new Object();
+// const gid = getURLParameter("gameid");
+// const qmid = getURLParameter("qm");
+var gid = playname;
+//console.log("Game: "+gid);
 
 $(document).ready(function() {
 	setDefaultValues();
+//	console.log("QMid: "+QM.qmid);
 	$table = $('#questiontable');
+ 	socket.emit("preGameStartRequest",QM.qmid,gid);
 });
 
 function startGame() {
@@ -31,30 +35,17 @@ function endGame() {
 }
 
 function setDefaultValues() {
-	$('#version').text(version);
-	$('#username').hide();
-	$('#userimg').hide();
-	$('#signoutbutton').hide();
-	$('#signinbutton').show();
-	$('#game').hide();
 	$('#play').hide();
 	$('#scores').hide();
-	$('#users').show();
+	$('#prestart').hide();
+	$('#qtable').hide();
 	clearMessages();
-//	console.log("Doc ready");
-}
-
-function setPostLoginValues() {
-	clearMessages();
-	$('#game').show();
-	$('#prestart').show();
-	$('#gameheader').text("Game: "+gid);
-	socket.emit("preGameStartRequest",QM.qmid,gid);
 }
 
 socket.on('preGameStartResponse',function(game) {
 //	console.log("Game: "+JSON.stringify(game));
-	$('#users').show();
+	$('#gameheader').text("Game: "+gid+" (Access Code: "+game.accesscode+")");
+	$('#prestart').show();
 	$('#answers').text(0);
 //	socket.emit("getQuestionsRequest",QM.qmid,game);
 	clearMessages();
@@ -98,26 +89,6 @@ socket.on('getQuestionsResponse',function(qlist) {
 	$table.bootstrapTable({data: qlist});
 });
 
-// This is called when a new contestant joins the game
-// con is an array of contestant names
-/* socket.on('contestantUpdate',function(con) {
-//	console.log("Contestants:"+con);
-	$('#numusers').text(Object.keys(con).length);
-	let ulist = "";
-	for(var i in con) {
-		ulist = ulist + con[i].cname +"<br/>";
-	}
-	$('#userlist').html(ulist);
-
-	$('#users').empty();	// remove all old buttons (usernames)
-	for(var i in con) {		// start afresh with user list
-		var button = document.createElement('button');
-		button.innerText = con[i].cname;
-		button.className = "btn btn-primary";
-		document.getElementById('users').appendChild(button);
-	}
-}); */
-
 // This is called when a contestant submits an answer
 socket.on('answersUpdate',function(ans) {
 	$('#answers').text(ans);
@@ -141,7 +112,9 @@ socket.on('multichoice',function(arr) {
 	}
 });
 
-socket.on('endGameResponse',function() {
-	window.close();
+socket.on('endGameResponse',function(gname) {
+	$('#admin-tab').click();
+	var gametab = "#"+gname;
+	$(gametab).remove();
 });
 

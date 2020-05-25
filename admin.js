@@ -3,12 +3,11 @@
 */
 var QM = new Object();
 var Questions = [];
+var playname;
 
 $(document).ready(function() {
 	setDefaultValues();
 	$table = $('#btable');
-//	$gmtable = $('#gamestable');
-//	$('#qselectform').submit(function(event) {event.preventDefault(); }); // stops form submit function
 });
 
 /* $(function() {
@@ -66,9 +65,8 @@ function getqs() {
 
 function newgame() {
 	if(!QM) return($('#error').text("You need to login first"));
- 
-	$('#newgame').show();
-	$('#gtable').hide();
+	createNewNavTab("Setup New Quiz","setup-tab","#setup");
+	$("#setup-tab").click();
 	socket.emit('getCatsRequest',QM.qmid);
 	socket.emit('getDiffsRequest',QM.qmid);
 	socket.emit('getGameTypesRequest',QM.qmid);
@@ -89,9 +87,6 @@ function setupGame() {
 
 socket.on('getGamesResponse',function(glist) {
 //	console.log(glist);
-	$('#gtable').show();
-	$('#qtable').hide();
-	$('#newgame').hide();
   	$('#gamestable').bootstrapTable({data: glist});
 	$('#gamestable').bootstrapTable('load', glist);
 });
@@ -100,6 +95,7 @@ socket.on('newGameResponse',function(msg) {
 	clearMessages();
 	$('#message1').text(msg);
 	socket.emit("getGamesRequest",QM.qmid);
+	cancelSetup();
 });
 
 socket.on('deleteGameResponse',function(msg) {
@@ -113,23 +109,31 @@ function setDefaultValues() {
 	$('#userimg').hide();
 	$('#signoutbutton').hide();
 	$('#signinbutton').show();
-	$('#qselect').hide();
-	$('#yourgames').hide();
+	$('#mynavtabs').hide();
+	$('#myTabContent').hide();
+	$('#adminmsg').show();
 	$('#qtable').hide();
-	$('#newgame').hide();
-	$('#myselect').hide();
-	$('#gtable').hide();
+	// $('#newgame').hide();
+	// $('#myselect').hide();
+	// $('#gtable').hide();
 	clearMessages();
 }
 
 function setPostLoginValues() {
 	clearMessages();
+	$('#mynavtabs').show();
+	$('#myTabContent').show();
 	$('#gameplay').show();
 	$('#prestart').show();
 	$('#yourgames').show();
 	$('#adminmsg').hide();
-	$('#newgame').hide();
 	socket.emit("getGamesRequest",QM.qmid);
+	$('#admin-tab').click();
+}
+
+function cancelSetup() {
+	$('#admin-tab').click();
+	$('#setup-tab').remove();
 }
 
 function actionFormatter(value, row, index) {
@@ -148,9 +152,22 @@ function actionFormatter(value, row, index) {
 }
 
 window.operateEvents = {
+	// Go to play quiz page
     'click .play': function (e, value, row, index) {
-//	  alert('You click action, row: ' + JSON.stringify(row));
-		window.open("gplay.html?gameid="+row.gamename, '_blank');
+		var pageid = "#play"+row.gamename;
+		createNewNavTab("Play "+row.gamename,row.gamename,pageid);
+		var node = document.createElement("div");	// Create a <li> node
+		node.setAttribute("class","tab-pane fade");
+		node.setAttribute("role","tabpanel");
+		node.setAttribute("id","play"+row.gamename);
+		// var ifr = document.createElement("iframe");	// Create a <iframe> node
+		// ifr.setAttribute("width","100%");
+		// ifr.setAttribute("src","gplay.html?qm="+QM.qmid+"&gameid="+row.gamename);
+		// node.appendChild(ifr);
+		document.getElementById("myTabContent").appendChild(node);
+		document.getElementById(row.gamename).click();
+		playname = row.gamename;
+		$(pageid).load("gplay.html");
     },
     'click .edit': function (e, value, row, index) {
 		socket.emit('getGameTypesRequest',QM.qmid);
@@ -162,7 +179,7 @@ window.operateEvents = {
 	 	$('#qmgtype').val(row.gametype);
 	},
 	'click .delete': function (e, value, row, index) {
-	  if(confirm('Are you sure you want to delete game: ' + JSON.stringify(row.gamename))) {
+	  if(confirm('Are you sure you want to delete game: '+JSON.stringify(row.gamename))) {
 		  socket.emit('deleteGameRequest',QM.qmid,row);
 	  }
 	}
