@@ -187,3 +187,20 @@ window.operateEvents = {
 	  }
 	}
 }
+
+function questionFormatter(value, row, index) {
+	var str;
+	if(row.imageurl) {
+		str = '<img src="http://tropicalfruitandveg.com/quizmaster/'+row.imageurl+'" alt="img">'
+	}
+	else 
+		str = "No image";
+    return [str].join('');
+}
+
+window.questionEvents = {
+	// Go to play quiz page
+    'click .viewimage': function (e, value, row, index) {
+		console.log("image: "+row.imageurl);
+    }
+}

@@ -15,6 +15,9 @@ var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');
 var qcountsound = new Audio('audio/questionwait.mp3');
 var newcontestantsound = new Audio('audio/smsalert3.mp3');
+Chart.defaults.global.animation.duration = 3000;	// chart.js is used for scores
+Chart.defaults.global.legend.position = "bottom";
+
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
  */
@@ -337,8 +340,6 @@ socket.on('scoresUpdate',function(cpoints) {
 		pts.push(c.points);
 	})
 	var ctx = $('#scores');
-	Chart.defaults.global.animation.duration = 3000;
-	Chart.defaults.global.legend.position = "bottom";
 	var cconfig = {
 		type: 'horizontalBar',
 		data: {

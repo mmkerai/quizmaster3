@@ -10,6 +10,8 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 	<link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
 	<script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha256-R4pqcOYV8lt7snxMQO/HSbVCFRPMdrhAFMH+vr9giYI=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css" />
 	<script src="https://apis.google.com/js/platform.js" async defer></script>
 	<meta name="google-signin-client_id" content="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com">
 	<script src="socket.io/socket.io.js"></script>
@@ -106,11 +108,12 @@
 			</div>
 			<div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="q-tab">
 				<br/><p class="qm-info">Current list of questions: <span class="messages" id="qlist"></span></p>
-				<select id="qcat"></select>
-				<button class="btn btn-info" onClick='getqs()'>Get Questions</button>
-				<button class="btn btn-warning" onClick='myselect()'>Add selected to quiz</button>
-				<button class="btn btn-primary" onClick='cancelQSelect()'>Done</button>
-				<img class="pull-right" id="qimage" width="125" height="125" src="http://tropicalfruitandveg.com/quizmaster/actors/qm-actors-030.jpg"/>
+				<div class="form-group">
+					<select id="qcat"></select>
+					<button class="btn btn-info" onClick='getqs()'>Get Questions</button>
+					<button class="btn btn-warning" onClick='myselect()'>Add selected to quiz</button>
+					<button class="btn btn-primary" onClick='cancelQSelect()'>Done</button>
+				</div>
 				<div id="qtable">
 					<table id="btable"
 						class="table table-striped"
@@ -130,7 +133,7 @@
 							<th data-field="type" data-sortable="true">Type</th>
 							<th data-field="question">Question</th>
 							<th data-field="answer">Answer</th>
-							<th data-field="imageurl">Image</th>
+							<th data-field="imageurl" data-width="132" data-events="questionEvents" data-formatter="questionFormatter">Image</th>
 						</tr>
 						</thead>
 					</table>

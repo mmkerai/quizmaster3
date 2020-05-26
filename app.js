@@ -35,8 +35,8 @@ const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const SUPERADMIN = "103301973641709867567"; //google id for thecodecentre@gmail.com
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
 var SUPERUSERS = new Object(); // keep list of authenticated super users by their socket ids
-const QFile = "";
-//const QFile = "QMQuestions2.json";
+//const QFile = "";
+const QFile = "QMQuestions.json";
 const QIDSTART = 1965;
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 const IMAGEURLBASE = "http://tropicalfruitandveg.com/quizmaster/";
@@ -184,7 +184,7 @@ io.on('connection',function(socket) {
     if(SUPERUSERS[socket.id] != qmid) return(socket.emit("errorResponse","Please login as admin"));
     const str = "Loading Questions to DB from file "+QFile;
 		console.log(str);
-    loadquestions(QFile,socket);
+//    loadquestions(QFile,socket);    // safety incase I accidently load questions again
 		socket.emit('infoResponse',str);
   });
 
