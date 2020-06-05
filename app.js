@@ -25,10 +25,10 @@ var qmt = new qm();
 //********** set the port to use
 const PORT = process.env.PORT || 3000;
 server.listen(PORT);
-console.log("Dir path: "+__dirname);
+//console.log("Dir path: "+__dirname);
 //*****Globals *************
-//const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
-const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
+// const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID="616776538800-qn2ergke0mq311tjkmkmf11149h6vbbn.apps.googleusercontent.com";
 const GOOGLE_CLIENT_SECRET = "xx";
 const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
 //const SUPERADMIN = "thecodecentre@gmail.com";

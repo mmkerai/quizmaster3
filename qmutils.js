@@ -114,10 +114,10 @@ function onRegister(googleUser) {
 
 function onSignIn(googleUser) {
 	var profile = googleUser.getBasicProfile();
-	console.log("ID: " + profile.getId()); // Don't send this directly to your server!
+	// console.log("ID: " + profile.getId()); // Don't send this directly to your server!
 	console.log('Logged in: ' + profile.getName());
 	var id_token = googleUser.getAuthResponse().id_token;
-//	console.log("ID Token: " + id_token);
+	// console.log("ID Token: " + id_token);
 	socket.emit('loginRequest',id_token);
 	clearMessages();
 }

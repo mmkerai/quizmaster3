@@ -111,6 +111,8 @@ socket.on('image',function(im) {
 socket.on('correctAnswer',function(message) {
 	$('#canswer').text("Correct Answer: "+message);
 	$('#canswer').show();
+	$('#qimage').hide();
+	$('#mchoice').hide();
 });
 
 socket.on('submitAnswerResponse',function(msg) {
