@@ -147,6 +147,7 @@ function setDefaultValues() {
 	$('#play').hide();
 	$('#qaform').hide();
 	$('#mchoice').hide();
+	$('#canswer').hide();
 	$('#scores').hide();
 	$('#gameheader').hide();
 	$('#menu').show();

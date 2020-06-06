@@ -24,10 +24,12 @@
 			</div>
 			<p>&nbsp;</p>
 			<p id="users"></p>
-			<button class="btn btn-info" id="startgame" onclick="startGame()">Start Game Play</button>
+			<div id="startgame">
+				<button class="btn btn-info" onclick="startGame()">Start Game Play</button>
+				<button class="btn btn-warning" onClick="cancelPlay()">Cancel</button>
+			</div>
 		</div>
 		<div id="play">
-			<button class="btn btn-success" id="nextq" onclick="nextQuestion()">Next Question</button>
 			<p class="qheader" id="qheader"></p>
 			<p class="qclass" id="question"></p>
 			<div class="countdown" id="timer"></div>
@@ -45,31 +47,14 @@
 			</div>
 			<div>&nbsp;</div>
 			<div id="gamecontrol">
-				<button class="btn btn-warning" id="shscores" onclick="showScores()">Show Scores</button>
-				<button class="btn btn-info" onclick="endGame()">End this game</button>
+				<button class="btn btn-success" onclick="nextQuestion()">Next Question</button>
+				<button class="btn btn-info" onclick="showScores()">Show Scores</button>
+				<button class="btn btn-warning" onclick="endGame()">End this game</button>
 			</div>
 		</div>
 		<p>&nbsp;</p>
 		<canvas id="scores" width="100%" height="28"></canvas>
-		<div id="qtable">
-			<table
-				id="questiontable"
-				class="table table-striped"
-				data-toggle="questiontable"
-				data-side-pagination="server">
-				<thead class="thead-light">
-				<tr>
-					<th data-field="qid">ID</th>
-					<th data-field="category">Category</th>
-					<th data-field="subcategory">Subcategory</th>
-					<th data-field="difficulty">Difficulty</th>
-					<th data-field="type">Type</th>
-					<th data-field="question">Question</th>
-					<th data-field="answer">Answer</th>
-					<th data-field="imageurl" data-width="132" data-formatter="questionFormatter">Image</th>
-				</tr>
-				</thead>
-			</table>
+		<div id="playqtable">
 		</div>
 	</div>
 	<script src="gplay.js"></script>

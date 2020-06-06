@@ -134,7 +134,7 @@ function signOut() {
 function clearMessages() {
 	$("#error").text("");
 	$("#message1").text("");
-	$("#message2").text("");
+	$('#setupgameerror').text("");
 }
 
 function getURLParameter(name) {
@@ -240,6 +240,11 @@ socket.on('getQuestionsResponse', function(qlist) {
 	$table.bootstrapTable('load', qlist);
 });
 
+socket.on('getGameQuestionsResponse', function(qlist) {
+	//	console.log(qlist);
+		$gqtable.bootstrapTable({data: qlist});
+	});
+	
 socket.on('getDiffsResponse', function(diffs) {
 	$('#qdiff').empty();
 	let items = Object.getOwnPropertyNames(diffs);
@@ -409,6 +414,55 @@ function createNewNavTab(label,id,link) {
     anc.setAttribute("role","tab");
 	node.appendChild(anc);
 	document.getElementById("mynavtabs").appendChild(node);
+}
+
+// Check if a play nav tab already open
+function checkPlayNavTab() {
+	var tab;
+	var navtabs = document.getElementsByClassName("nav-link");
+	navtabs.forEach(function(value,index) {
+		tab = navtabs[index].getAttribute("href");
+		console.log("NavTab: "+tab);
+		if(tab.includes("play")) {	// return true if valid
+			console.log("true");
+			return(true);	
+		}
+	});
+	return(false);
+}
+
+// clear form fields before showing new game setup menu
+function clearGameSetup() {
+	$('#qmgname').val("");
+	$('#qmgquestions').val("");
+	$('#qmgtime').val(20);
+	$('#qmgtype').val("");
+	$gqtable.bootstrapTable('removeAll');
+}
+
+// Create a question table
+function createQuestionTable(divid,tableid) {
+	var str = `
+		<table
+			id="`+tableid+`"
+			class="table table-striped"
+			data-toggle="questiontable"
+			data-side-pagination="server">
+			<thead class="thead-light">
+			<tr>
+				<th data-field="qid">ID</th>
+				<th data-field="category">Category</th>
+				<th data-field="subcategory">Subcategory</th>
+				<th data-field="difficulty">Difficulty</th>
+				<th data-field="type">Type</th>
+				<th data-field="question">Question</th>
+				<th data-field="answer">Answer</th>
+				<th data-field="imageurl" data-width="132" data-formatter="questionFormatter">Image</th>
+			</tr>
+			</thead>
+		</table>`;
+//	console.log(str);
+	document.getElementById(divid).innerHTML = str;
 }
 
 function showCountdown() {

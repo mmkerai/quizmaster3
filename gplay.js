@@ -8,10 +8,10 @@ var gid = playname;
 //console.log("Game: "+gid);
 
 $(document).ready(function() {
-	setDefaultValues();
 //	console.log("QMid: "+QM.qmid);
-	$table = $('#questiontable');
- 	socket.emit("preGameStartRequest",QM.qmid,gid);
+	setDefaultValues();
+	socket.emit("preGameStartRequest",QM.qmid,gid);
+	createQuestionTable("playqtable","pqtable");
 });
 
 function startGame() {
@@ -38,8 +38,16 @@ function setDefaultValues() {
 	$('#play').hide();
 	$('#scores').hide();
 	$('#prestart').hide();
-	$('#qtable').hide();
+	$('#gamecontrol').hide();
+	$('#mchoice').hide();
 	clearMessages();
+}
+
+function cancelPlay() {
+	$('#play'+gid).remove();		// remove tab content
+	$('#'+gid).remove();			// remove tab label
+	$('#admin-tab').click();
+//	document.getElementById(gid).remove();
 }
 
 socket.on('preGameStartResponse',function(game) {
@@ -47,46 +55,36 @@ socket.on('preGameStartResponse',function(game) {
 	$('#gameheader').text("Game: "+gid+" (Access Code: "+game.accesscode+")");
 	$('#prestart').show();
 	$('#answers').text(0);
-//	socket.emit("getQuestionsRequest",QM.qmid,game);
 	clearMessages();
-	$('#qtable').show();
-	$table.bootstrapTable({data: game.questions});
+	$('#pqtable').bootstrapTable({data: game.questions});
 });
 
 socket.on('startGameResponse',function(game) {
 	$('#play').show();
 	$('#startgame').hide();
-	$('#answait').hide();
+//	$('#answait').hide();
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
 	$('#users').hide();		// only required the first time to hide contentants who joined the game
 	if(qobject == "") {
 		clearMessages();
-		$('#shscores').show();
+		$('#gamecontrol').show();
 		$('#question').hide();
 		$('#qanswer').val("");
 		$('#qimage').hide();
 		$('#mchoice').hide();
 	}
 	else {
-		$('#question').text(qobject);
 		$('#question').show();
-		$('#answait').hide();
-		$('#nextq').show();
+		$('#gamecontrol').hide();
 	}
 	$('#question').text(qobject);
-	$('#answait').show();
+//	$('#answait').show();
 });
 
 socket.on('timeUpdate',function(message) {
 	$('#timer').text(message);
-});
-
-socket.on('getQuestionsResponse',function(qlist) {
-//	console.log('Qlist: '+JSON.stringify(qlist));
-	$('#qlist').show();
-	$table.bootstrapTable({data: qlist});
 });
 
 // This is called when a contestant submits an answer

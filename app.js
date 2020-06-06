@@ -277,6 +277,14 @@ io.on('connection',function(socket) {
     });
   });
 
+// This gets all question for specific game.
+socket.on('getGameQuestionsRequest',function(qmid,gname) {
+  if(!validUser(socket,qmid)) return;
+  dbt.getQuestionsByID(gname,function(qs) {
+    socket.emit("getGameQuestionsResponse",qs);
+  });
+});
+
 // this event is used to prepare for game start.
 // Needs to be called before starting play so players can join.
   socket.on('preGameStartRequest',function(qmid,gname) {
