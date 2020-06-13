@@ -7,7 +7,7 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.91";
+const version = "QM v0.93";
 //const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 var auth2; // The Sign-In object.

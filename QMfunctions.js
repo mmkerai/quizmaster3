@@ -45,6 +45,8 @@ class QMaster {
     this.api_requests = 0;
     this.reg_date = new Date().getTime();
     this.reg_users = 0;
+    this.max_con = 8;   // max contestants allowed
+    this.max_q = 10;    // max questions per game
     this.games = [];    //all the games created by this QM
   }
 };
@@ -54,6 +56,8 @@ class QMGame {
       constructor(game) {
 //          this.gameid = game.gameid;
           this.qmid = game.qmid;
+          this.max_con = 
+          this.max_q = 
           this.gamename = game.gamename;
           this.numquestions = game.questions.length;  // number of questions in the array
           this.timelimit = game.timelimit;    // time per question in seconds
@@ -121,7 +125,6 @@ const GTYPE = {PUBQUIZ:'pubquiz'};
   
 var ActiveGameByName = new Object();    //list of all active games in play by gamename
 var ActiveGameByCode = new Object();    //list of all accesscodes for active games
-//var Contestants = new Object();    //list of all contestants for active games
 
 function QMQ() {
 console.log("QM Class initialised");
@@ -294,6 +297,7 @@ QMQ.prototype.getGameFromAccessCode = function(code) {
 }
 
 // New contestant joins an active game, access code has already beem verified at this stage
+// TODO check max contestants have not been exceeded in the QM object
 QMQ.prototype.joinGame = function(game,contestant) {
     game.contestants.forEach(con => {
       if(con.cname == contestant.userid)   // username already exists
@@ -353,7 +357,7 @@ QMQ.prototype.registerAnswer = function(game,ans) {
       }
   });
   
-  return(true);
+  return(points);
 }
 
 // get the contestant points for this specific question.
@@ -374,6 +378,7 @@ QMQ.prototype.getContestantPoints = function(game) {
 QMQ.prototype.getContestantScores = function(gname) {
   let result = [];
   let game = ActiveGameByName[gname];
+  // TODO arrnage in order of points and limit to top 5
   if(game) {
     for(var i in game.contestants) {
       let c = new Object();

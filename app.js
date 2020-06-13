@@ -470,15 +470,25 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
     }
   });
 
+  // Send announcement to all contestants
+  socket.on('announcementRequest',function(qmid,gamename,msg) {
+    if(!validUser(socket,qmid)) return;
+    io.in(gamename).emit('announcement',msg);
+//    console.log("Announcement: "+msg);
+  });
+
 // used by contestant to submit their answer so no login/auth required
   socket.on('submitAnswerRequest',function(ans) {
 //    console.log("Reg answer: "+ans.val+" for "+ans.token);
     let game = qmt.getGameFromToken(ans.token);
     if(game) {
       game.answers++;   // keep tab of how many answers submitted
-      if(status = qmt.registerAnswer(game,ans)) {
-      socket.emit("submitAnswerResponse","Answer registered: "+ans.val);
-      io.in(game.gamename).emit('answersUpdate',game.answers);
+      if(points = qmt.registerAnswer(game,ans)) {
+        cans = new Object();
+        cans.answer = ans.val;
+        cans.points = points;
+        socket.emit("submitAnswerResponse",cans);
+        io.in(game.gamename).emit('answersUpdate',game.answers);
 //      io.to(QMSockets[game.qmid]).emit("answersUpdate",game.answers);  // tell the quizmaster
       }
       else {

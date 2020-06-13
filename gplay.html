@@ -22,7 +22,6 @@
 					</div>
 				</div>
 			</div>
-			<p>&nbsp;</p>
 			<p id="users"></p>
 			<div id="startgame">
 				<button class="btn btn-info" onclick="startGame()">Start Game Play</button>
@@ -53,9 +52,17 @@
 			</div>
 		</div>
 		<p>&nbsp;</p>
-		<canvas id="scores" width="100%" height="28"></canvas>
-		<div id="playqtable">
+		<div id="announcement">
+			<div class="col-xs-6">
+				<input type="text" class="form-control" id="announcementmsg" placeholder="Your Message"/>
+			</div>
+			<div class="col-xs-2">
+				<button class="btn btn-danger" onclick="sendAnnouncement()" type="submit">Send Announcement</button>
+			</div>
 		</div>
+		<p>&nbsp;</p>
+		<canvas id="scores" width="100%" height="28"></canvas>
+		<div id="playqtable"></div>
 	</div>
 	<script src="gplay.js"></script>
 	

@@ -55,25 +55,12 @@ socket.on('joinGameResponse',function(contestant) {
 	saveCookie("quizmaster",contestant.token,1800);	// save credentials for 30 mins
 });
 
-/* socket.on('timeUpdate',function(message) {
-	$('#timer').text(message);
-}); */
-
-// This is called when a new contestant joins the game
-// con is an array of contestant names
-/* socket.on('contestantUpdate',function(con) {
-	$('#users').empty();	// remove all old buttons (usernames)
-	for(var i in con) {		// start afresh with user list
-		var button = document.createElement('button');
-		button.innerText = con[i].cname;
-		button.className = "btn btn-primary";
-		document.getElementById('users').appendChild(button);
-	}
-}); */
-
 socket.on('currentQuestionUpdate',function(qobject) {
+	$('#pjoinmsg').hide();		// only required the first time to hide contentants who joined the game
 	$('#users').hide();		// only required the first time to hide contentants who joined the game
-	$('#canswer').hide();
+	$('#correctans').hide();
+	$('#yourans').hide();
+	$('#yourpts').hide();
 	$('#scores').hide();
 	if(qobject.length == 0) {
 		clearMessages();
@@ -87,7 +74,7 @@ socket.on('currentQuestionUpdate',function(qobject) {
 		$('#qaform').show();
 		$('#question').text(qobject);
 		$('#question').show();
-		$('#sbutton').removeAttr('disabled');
+		$('#sbutton').show();
 	}
 });
 
@@ -109,16 +96,20 @@ socket.on('image',function(im) {
 });
 
 socket.on('correctAnswer',function(message) {
-	$('#canswer').text("Correct Answer: "+message);
-	$('#canswer').show();
+	$('#correctans').text("Correct answer: "+message);
+	$('#correctans').show();
+	$('#yourans').show();
+	$('#yourpts').show();
 	$('#qimage').hide();
 	$('#mchoice').hide();
 });
-
-socket.on('submitAnswerResponse',function(msg) {
+ 
+socket.on('submitAnswerResponse',function(ans) {
 //	console.log(msg);
-	$('#message1').text(msg);
-	$('#sbutton').attr('disabled','disabled');
+	$('#yourans').text("Your answer: "+ans.answer);
+	$('#points').text(ans.points);
+	$('#yourans').show();
+	$('#sbutton').hide();
 	$('#mchoice').hide();
 });
 
@@ -147,10 +138,13 @@ function setDefaultValues() {
 	$('#play').hide();
 	$('#qaform').hide();
 	$('#mchoice').hide();
-	$('#canswer').hide();
+	$('#correctans').hide();
+	$('#yourans').hide();
+	$('#yourpts').hide();
 	$('#scores').hide();
 	$('#gameheader').hide();
 	$('#menu').show();
+	$('#pjoinmsg').show();
 	$('#users').show();
 	var token = readCookie("quizmaster");
 	if(token)

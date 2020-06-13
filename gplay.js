@@ -24,6 +24,11 @@ function nextQuestion() {
 	clearMessages();
 }
 
+function sendAnnouncement() {
+	var msg = $('#announcementmsg').val();
+	socket.emit("announcementRequest",QM.qmid,gid,msg);
+}
+
 function showScores() {
 	socket.emit("showScoresRequest",QM.qmid,gid);
 	clearMessages();
@@ -62,7 +67,7 @@ socket.on('preGameStartResponse',function(game) {
 socket.on('startGameResponse',function(game) {
 	$('#play').show();
 	$('#startgame').hide();
-//	$('#answait').hide();
+	$('#announcement').hide();
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
@@ -111,8 +116,6 @@ socket.on('multichoice',function(arr) {
 });
 
 socket.on('endGameResponse',function(gname) {
-	$('#admin-tab').click();
-	var gametab = "#"+gname;
-	$(gametab).remove();
+	cancelPlay();
 });
 

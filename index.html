@@ -53,7 +53,7 @@
 	</div>
 	<div id="play">
 		<!-- <p class="messages">Players joined: <button type="button" class="btn btn-warning" id="users" data-toggle="modal" data-target="#mymodal"></button></p> -->
-		<p class="messages">Players joined:</p>
+		<p id="pjoinmsg" class="messages">Players joined:</p>
 		<p id="users"></p>
 		<p class="qheader" id="qheader"></p>
 		<p class="qclass" id="question"></p>
@@ -81,7 +81,12 @@
 				<button id="mchoice4" type="button" class="btn btn-danger customb" onclick="mcanswer(3)"></button>
 			</div>
 		</div>
-		<p id="canswer" class="qheader"></p>
+		<div class="col-xs-12">
+			<p id="correctans" class="canswer"></p>
+			<p id="yourans" class="yanswer"></p>
+			<p id="yourpts" class="yanswer">Points: <button id="points" class="btn btn-success btn-sm"></button></p>
+			</p>
+		</div>
 	</div>
 	<canvas id="scores" width="100%" height="28"></canvas>
 </div>
