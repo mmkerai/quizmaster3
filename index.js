@@ -5,6 +5,8 @@
 var QM = new Object();
 var Questions = [];
 var Marray = [];
+Chart.defaults.global.animation.duration = 3000;	// chart.js is used for scores
+Chart.defaults.global.legend.position = "bottom";
 
 $(document).ready(function() {
 	setDefaultValues();
@@ -14,6 +16,8 @@ $(document).ready(function() {
 	$('#ansform').submit(function(event) {
 		event.preventDefault();
 	});
+
+	socket.emit("getPopularQuizesRequest","");
 });
 
 function doJoin() {
@@ -46,6 +50,7 @@ function cleave() {
 
 socket.on('joinGameResponse',function(contestant) {
 	$('#joingamex').hide();
+	$('#popular').hide();
 	$('#menu').hide();
 	$('#play').show();
 	$('#username').text(contestant.userid);

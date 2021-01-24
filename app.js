@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT);
 //console.log("Dir path: "+__dirname);
 //*****Globals *************
-// const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
+//const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
 const GOOGLE_CLIENT_ID="616776538800-qn2ergke0mq311tjkmkmf11149h6vbbn.apps.googleusercontent.com";
 const GOOGLE_CLIENT_SECRET = "xx";
 const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -40,6 +40,8 @@ const QFile = "QMQuestions.json";
 const QIDSTART = 1965;
 const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 const IMAGEURLBASE = "http://tropicalfruitandveg.com/quizmaster/";
+const GAMEDESCLENGTH = 96;    // length of the game description
+const DEFAULTGAMEICON = "images/myquiz.jpg";
 
 app.get('/*', function(req, res){
 	res.sendFile(__dirname + req.path);
@@ -153,7 +155,7 @@ io.on('connection',function(socket) {
           audience: GOOGLE_CLIENT_ID
       });
       const payload = ticket.getPayload();
-//      console.log(payload);
+      console.log(payload);
       var user = null;
       dbt.checkQMaster(payload.sub,function(valid) {
         if(valid) {
@@ -306,6 +308,18 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
     });
   });
 
+/* This func checks game params are valid and then creates DB entry.
+ * game object fields:
+ * gamename
+ * qmid (quizmaster id)
+ * gametype
+ * questions (this is an array of question ids)
+ * timelimit
+ * accesscode (this is created randomly later)
+ * gamedesc (game description)
+ * gameicon (URL to image file)
+ * likes
+ */
   socket.on('newGameRequest',function(qmid,game) {
     if(!validUser(socket,qmid)) return;
     if(!qmt.checkGameTypes(game.gametype))
@@ -314,12 +328,18 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
       return(socket.emit("gameSetupErrorResponse","Please use a name at least 6 chars long"));
     if(game.timelimit < 5)
       return(socket.emit("gameSetupErrorResponse","Time for each question should be at least 5 seconds"));
-
     game.questions = qmt.getQuestionList(game.questions);
     if(game.questions.length < 1)
       return(socket.emit("gameSetupErrorResponse","Question list error"));
     if(game.questions.length > 10)
       return(socket.emit("gameSetupErrorResponse","Maximum 10 questions allowed"));
+    game.gamedesc = game.gamedesc.substr(0,GAMEDESCLENGTH);   // limit length of description
+    if(game.gameicon.length > 0) {
+      if(game.gameicon.indexOf("http://") == -1 || game.gameicon.indexOf("https://") == -1)
+        return(socket.emit("gameSetupErrorResponse","Game icon should be full domain url"));
+    } else {
+        game.gameicon = DEFAULTGAMEICON;
+    }
 
 // If existing game then update it else create new one.
 // Game name needs to be unique per QM id (google user)
@@ -338,6 +358,7 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
       }
       else {    // game doesnt exist so create new one
         console.log("Creating new game: "+game.gamename);
+        game.likes = 1;   // initialise the game likes
         dbt.createNewGame(game,function(res) {
           if(res) // went well
             str = "New Game created: "+game.gamename;
@@ -414,6 +435,16 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
     io.in(gamename).emit('announcement','Quizmaster has ended the game!');
     socket.emit("endGameResponse",gamename);
   });
+
+// Get the pre-loaded quizes in case user does not want to create their own
+// Used the qmid of the super admin (code centre)
+socket.on('getPopularQuizesRequest',function() {
+  dbt.getGames(SUPERADMIN,function(games) {
+    if(games.length > 0) {
+      socket.emit('getPopularQuizesResponse',games);
+    }
+  });
+});
 
 // used by contestant to join game so no login/auth required
 // if previously joined then there will be a token saved in a cookie

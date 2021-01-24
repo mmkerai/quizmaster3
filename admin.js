@@ -4,6 +4,8 @@
 var QM = new Object();
 var Questions = [];
 var playname;
+Chart.defaults.global.animation.duration = 3000;	// chart.js is used for scores
+Chart.defaults.global.legend.position = "bottom";
 
 $(document).ready(function() {
 	setDefaultValues();
@@ -71,6 +73,11 @@ function setupGame() {
 	newg.questions = $('#qmgquestions').val();
 	newg.timelimit = $('#qmgtime').val();
 	newg.gametype = $('#qmgtype').val();
+	newg.gamedesc = $('#qmgdesc').val();
+	if(newg.gamedesc.length == 0) {
+		newg.gamedesc = "This is the game description";
+	}
+	newg.gameicon = "";
 	socket.emit('newGameRequest',QM.qmid,newg);
 }
 
@@ -198,6 +205,7 @@ window.operateEvents = {
 		$('#qmgquestions').val(row.questions);
 	 	$('#qmgtime').val(row.timelimit);
 		$('#qmgtype').val(row.gametype);
+		$('#qmgdesc').val(row.gamedesc);
 		createQuestionTable("myqtable","mqtable");
 		$gqtable = $('#mqtable');
 		socket.emit('getGameQuestionsRequest',QM.qmid,row.questions);

@@ -43,6 +43,7 @@ DB.prototype.newQMaster = function(qmobj,callback) {
 DB.prototype.checkQMaster = function(uid,callback) {
   CollQmasters.find({qmid: uid}).toArray(function(err,result) {
     if (err) throw err;
+//    console.log("Check QMaster: "+result);
     if(typeof result != "undefined" && result.length > 0)
       callback(true);
     else
@@ -159,8 +160,11 @@ DB.prototype.getQuestionById = function(id,callback) {
 DB.prototype.getGames = function(id,callback) {
 //  console.log("Getting Games for: "+id);
   CollGames.find({qmid:id}).toArray(function(err,result) {
-    if (err) console.log("No games for QM id: "+id);
-    // console.log("q "+id+" details: "+result);
+    if (err) {
+      console.log("No games for QM id: "+id);
+      throw(err);
+    }
+     // console.log("q "+id+" details: "+result);
     callback(result);
   });
 }
@@ -206,7 +210,7 @@ DB.prototype.updateGame = function(game,callback) {
 // Delete a game in the games collection
 DB.prototype.deleteGame = function(game,callback) {
   CollGames.deleteOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
-    console.log("Res: "+ JSON.stringify(res));
+//    console.log("Res: "+ JSON.stringify(res));
     if (err) throw err;
     callback(true);
   });

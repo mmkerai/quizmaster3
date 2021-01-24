@@ -15,8 +15,8 @@ var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');
 var qcountsound = new Audio('audio/questionwait.mp3');
 var newcontestantsound = new Audio('audio/smsalert3.mp3');
-Chart.defaults.global.animation.duration = 3000;	// chart.js is used for scores
-Chart.defaults.global.legend.position = "bottom";
+// Chart.defaults.global.animation.duration = 3000;	// chart.js is used for scores
+// Chart.defaults.global.legend.position = "bottom";
 
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
@@ -117,7 +117,7 @@ function onSignIn(googleUser) {
 	// console.log("ID: " + profile.getId()); // Don't send this directly to your server!
 	console.log('Logged in: ' + profile.getName());
 	var id_token = googleUser.getAuthResponse().id_token;
-	// console.log("ID Token: " + id_token);
+//	console.log("ID Token: " + id_token);
 	socket.emit('loginRequest',id_token);
 	clearMessages();
 }
@@ -173,6 +173,7 @@ socket.on('loginResponse', function(userinfo) {
 	}
 	else {
 		$("#error").text("Login not valid");
+		console.log("User signed in failure");
 	}
 });
 
@@ -369,28 +370,6 @@ socket.on('scoresUpdate',function(cpoints) {
 			  	}]
 			}
 		}
-/* 		options: {title: {
-			display: true,
-			fontSize: 16,
-            text: 'Scores'},
-			scales: {
-				yAxes: [{
- 					display: true,
-					gridLines: {
-						display: false
-					},
-					scaleLabel: {
-						display: true,
-						fontSize: 16,
-						fontStyle: "oblique",
-						labelString: 'Contestant'
-					}, 
-					ticks: {
-						beginAtZero: true
-					}
-				}]
-			}
-		} */
 	};
 	if(scores != undefined) {
 		scores.config = cconfig;
@@ -401,6 +380,60 @@ socket.on('scoresUpdate',function(cpoints) {
 	}
 });
 
+socket.on('getPopularQuizesResponse',function(quizes) {
+	console.log(quizes);
+	var mobile = false;
+	var maxcol;
+	var pnum = 3;		// start with 1 less than maxcol so it creates the first row
+	if(isMobileDevice())		// check if this is a mobile device so reduce to one column
+		maxcol = 1;
+	else
+		maxcol = 4;
+
+//	console.log("mobile is "+maxcol);
+	$('#play').hide();
+	$('#popular').show();
+	var newrow;
+	quizes.forEach(quiz => {
+		pnum++;
+		if(pnum % maxcol == 0)	{	// need a new row
+			newrow = document.createElement("tr")
+		}
+		var node = document.createElement("td");
+		node.setAttribute("class","popquiz");
+		var tdiv = document.createElement("div");
+		tdiv.setAttribute("class","gameitem");
+		var img = document.createElement("img");
+		img.setAttribute("class","gicon");
+		img.setAttribute("src",quiz.gameicon);
+//		img.setAttribute("alt","quiz icon");
+		var pn = document.createElement("p");	// quiz name
+		pn.className = "gamename";
+		var pntext = document.createTextNode(quiz.gamename);
+		pn.appendChild(pntext);
+		var pd = document.createElement("p");	// quiz description
+		pd.className = "gamedesc";
+		pntext = document.createTextNode(quiz.gamedesc);
+		pd.appendChild(pntext);
+		var like = document.createElement("img");	// likes
+		like.setAttribute("src","images/h3.png");
+		var lnum = document.createElement("span");	// num of likes
+		var likes = quiz.likes || 1;
+		pntext = document.createTextNode(likes);
+		lnum.appendChild(pntext);
+		tdiv.appendChild(img);
+		tdiv.appendChild(pn);
+		tdiv.appendChild(pd);
+		tdiv.appendChild(like);
+		tdiv.appendChild(lnum);
+		node.appendChild(tdiv);
+		newrow.appendChild(node);
+		if(pnum % maxcol == 0)	{	// need a new row
+			document.getElementById("poptable").appendChild(newrow);
+		}
+	});
+});
+	
 // Create a new nav tab and navigate to it
 function createNewNavTab(label,id,link) {
 	var node = document.createElement("LI");	// Create a <li> node
@@ -521,4 +554,8 @@ function saveCookie(name, value, delay)
 function deleteCookie(name) 
 {
 	document.cookie = name + "=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/";
+}
+
+function isMobileDevice() {
+    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
 }
