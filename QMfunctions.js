@@ -1,7 +1,6 @@
 // This file contains all Questions Functions
 require('dotenv').config();
 //const dl = require('damerau-levenshtein-js');
-
 const db = require('./DBfunctions.js');
 var Dbt = new db();
 class QMApp {
