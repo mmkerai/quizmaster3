@@ -15,13 +15,26 @@ var CollGames = 0;
 function DB() {
   const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
   client.connect(err => {
-    CollApps = client.db(DBNAME).collection(Apps);
-    CollQuestions = client.db(DBNAME).collection(Questions);
-    CollQmasters = client.db(DBNAME).collection(Qmasters);
-    CollGames = client.db(DBNAME).collection(CollQMGame);
+    if(err)
+      console.log("MongoDB: "+err);
+    else {
+      console.log("MongoDB connected");
+      CollApps = client.db(DBNAME).collection(Apps);
+      CollQuestions = client.db(DBNAME).collection(Questions);
+      CollQmasters = client.db(DBNAME).collection(Qmasters);
+      CollGames = client.db(DBNAME).collection(CollQMGame);
+
+//      listDatabases(client);
+    }
   });
-  console.log("DB Class initialised");
 }
+
+function listDatabases(client){
+  client.db(DBNAME).listCollections().toArray(function(err, names) {
+    if(!err)
+    console.log(names);
+  });
+};
 
 DB.prototype.createApp = function(appobj,socket) {
   CollApps.insertOne(appobj, function(err, res) {
@@ -242,6 +255,16 @@ DB.prototype.getQuestionsByID = function(qlist,callback) {
   });
 }
 
+// get game from access code. used for selfplay
+DB.prototype.getGameFromAccesscode = function(qmid,ac,callback) {
+  CollGames.findOne({qmid:qmid,accesscode:ac}, function(err, res) {
+    if (err) throw err;
+//    console.log("Game: "+ JSON.stringify(res));
+      callback(res);
+
+  });
+}
+
 // creates a random game access code for contestants to enter the game
 function generateAccesscode() {
   var length = 8,
@@ -253,6 +276,7 @@ function generateAccesscode() {
   return retVal;
 }
 
+/* functions below are for use with SQL database */
 /*
 DB.prototype.getQMByEmail = function(obj,socket) {
   let checkqm = "SELECT * FROM "+DBNAME+"."+QMTable+" WHERE qmemail='"+obj.email+"'";

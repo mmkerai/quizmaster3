@@ -7,9 +7,7 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.95";
-//const GOOGLE_CLIENT_ID="132511972968-co6rs3qsngvmc592v9qgreinp1q7cicf.apps.googleusercontent.com";
-//const GOOGLE_CLIENT_ID="132511972968-ubjmvagd5j2lngmto3tmckdvj5s7rc7q.apps.googleusercontent.com";
+const version = "QM v0.96";
 var auth2; // The Sign-In object.
 var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');
@@ -381,7 +379,7 @@ socket.on('scoresUpdate',function(cpoints) {
 });
 
 socket.on('getPopularQuizesResponse',function(quizes) {
-	console.log(quizes);
+//	console.log(quizes);
 	var mobile = false;
 	var maxcol;
 	var pnum = 3;		// start with 1 less than maxcol so it creates the first row
@@ -389,7 +387,7 @@ socket.on('getPopularQuizesResponse',function(quizes) {
 		maxcol = 1;
 	else
 		maxcol = 4;
-
+ 
 //	console.log("mobile is "+maxcol);
 	$('#play').hide();
 	$('#popular').show();
@@ -401,6 +399,7 @@ socket.on('getPopularQuizesResponse',function(quizes) {
 		}
 		var node = document.createElement("td");
 		node.setAttribute("class","popquiz");
+		node.setAttribute("onClick","playself('"+quiz.accesscode+"')");
 		var tdiv = document.createElement("div");
 		tdiv.setAttribute("class","gameitem");
 		var img = document.createElement("img");

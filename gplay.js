@@ -4,13 +4,14 @@
 // var QM = new Object();
 // const gid = getURLParameter("gameid");
 // const qmid = getURLParameter("qm");
-var gid = playname;
+var gname = playname;	// inherited from admin.js to start playing this game name
+var gid;		// this specific instance of this game
 //console.log("Game: "+gid);
 
 $(document).ready(function() {
 //	console.log("QMid: "+QM.qmid);
 	setDefaultValues();
-	socket.emit("preGameStartRequest",QM.qmid,gid);
+	socket.emit("preGameStartRequest",QM.qmid,gname);
 	createQuestionTable("playqtable","pqtable");
 });
 
@@ -18,7 +19,7 @@ function startGame() {
 	socket.emit("startGameRequest",QM.qmid,gid);
 	clearMessages();
 }
-
+ 
 function nextQuestion() {
 	socket.emit("nextQuestionRequest",QM.qmid,gid);
 	clearMessages();
@@ -57,7 +58,8 @@ function cancelPlay() {
 
 socket.on('preGameStartResponse',function(game) {
 //	console.log("Game: "+JSON.stringify(game));
-	$('#gameheader').text("Game: "+gid+" (Access Code: "+game.accesscode+")");
+	gid = game.gameid;		// this uniquely identifies this game instance
+	$('#gameheader').text("Game: "+gname+" (Access Code: "+game.accesscode+")");
 	$('#prestart').show();
 	$('#answers').text(0);
 	clearMessages();

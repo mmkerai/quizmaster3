@@ -50,10 +50,10 @@ class QMaster {
   }
 };
 
-// This is only used when a game starts - not stroed as is in the DB
+// This object is only created when a game starts - not stored as is in the DB
 class QMGame {
       constructor(game) {
-//          this.gameid = game.gameid;
+          this.gameid = generateGameId();    // create a new game ID - unique id for this game
           this.qmid = game.qmid;
           this.max_con = 
           this.max_q = 
@@ -71,10 +71,11 @@ class QMGame {
 };
 
 // This is used when a game starts. One object per contestant
+// gameid is used to uniquely identify the game user has joined
 class QMContestant {
-      constructor(con) {
+      constructor(con,gameid) {
           this.cname = con.userid;
-          this.token = generateCToken(con.accesscode);  // unique token for this user
+          this.gameid = gameid;  // game this contestant has joined
           this.answers = [];    // list of answers, could be text, numbers or multichoice
           this.points = [];   // points for each question/answer in same order
           this.totals = 0;
@@ -123,7 +124,8 @@ const QTYPE = {
 const GTYPE = {PUBQUIZ:'pubquiz'};
   
 var ActiveGameByName = new Object();    //list of all active games in play by gamename
-var ActiveGameByCode = new Object();    //list of all accesscodes for active games
+var ActiveGameByAccessCode = new Object();    //list of all accesscodes for active games
+var ActiveGameByGameId = new Object();    //list of all active games
 
 function QMQ() {
 console.log("QM Class initialised");
@@ -170,22 +172,33 @@ QMQ.prototype.gameReady = function(qmid,gname,callback) {
     // this gets question objects based on question ids
     Dbt.getQuestionsByID(game.questions,function(qs) {
       let newg = new QMGame(game);
-//      console.log("Qs: "+qs);
+//      console.log("active game: "+JSON.stringify(newg));
       newg.questions = qs;  //replace question ids with full details of the questions
       // build list of accesscodes so its quicker to join later
       ActiveGameByName[game.gamename] = newg;    // add game to the list
-      ActiveGameByCode[game.accesscode] = newg; 
+      ActiveGameByAccessCode[game.accesscode] = newg;     // used to get full game details using access code
+      ActiveGameByGameId[newg.gameid] = newg;     // used to get full game details when in play
       callback(newg);
     });
   });
 }
 
-// Find the active game before starting
-QMQ.prototype.getActiveGame = function(gamename) {
-  return(ActiveGameByName[gamename]);
+// Like gameReady but for self play
+QMQ.prototype.selfPlayGameReady = function(game,callback) {
+    // this gets question objects based on question ids
+    Dbt.getQuestionsByID(game.questions,function(qs) {
+      let newg = new QMGame(game);
+      newg.questions = qs;  //replace question ids with full details of the questions
+      callback(newg);
+    });
 }
 
-// Superadmin debug onlu
+// Find the active game before starting
+QMQ.prototype.getActiveGameFromGameId = function(gameid) {
+  return(ActiveGameByGameId[gameid]);
+}
+
+// Superadmin debug only
 QMQ.prototype.getAllActiveGames = function() {
   let garray = [];
   Object.keys(ActiveGameByName).forEach(g => {
@@ -292,7 +305,16 @@ QMQ.prototype.verifyquestion = function(qobj) {
 
 // This returns the game object from the assigned access code
 QMQ.prototype.getGameFromAccessCode = function(code) {
-  return(ActiveGameByCode[code]);    // get game if access code matches
+  return(ActiveGameByAccessCode[code]);    // get game if access code matches
+}
+
+// This is called when starting self play, if public quiz then uses the superadmin (TCC) games
+// otherwise checks the game is valid for the quizmaster
+QMQ.prototype.playSelfGame = function(qmid,accesscode,callback) {
+  Dbt.getGameFromAccesscode(qmid,accesscode, function(game) {
+      callback(game);
+  });
+
 }
 
 // New contestant joins an active game, access code has already beem verified at this stage
@@ -302,33 +324,38 @@ QMQ.prototype.joinGame = function(game,contestant) {
       if(con.cname == contestant.userid)   // username already exists
         return(false);
     }); // all good, username is unique
-    let con = new QMContestant(contestant);
+    let con = new QMContestant(contestant,game.gameid);
     game.contestants.push(con); // add this contestant to this game
     return(con);  // return the game object
 }
 
-// get the game info using the token. Token is in format "accesscode:uniquestring"
-QMQ.prototype.getGameFromToken = function(token) {
-  let tarr = token.split(":");
-  let code = tarr[0];   // first field is the accesscode
-  return(ActiveGameByCode[code]);
+// get the game object from the gameid
+QMQ.prototype.getGameFromGameId = function(gameid) {
+
 }
 
-// This returns the contestant object from the their token
-QMQ.prototype.getContestantFromToken = function(game,token) {
-  for(var i in game.contestants) {
-    if(game.contestants[i].token == token) {
-//      console.log("test token: "+game.contestants[i].token);
-      return(game.contestants[i]);
-    }
-  }
-  return(false);
-}
+// // get the game info using the token. Token is in format "accesscode:uniquestring"
+// QMQ.prototype.getGameFromToken = function(token) {
+//   let tarr = token.split(":");
+//   let code = tarr[0];   // first field is the accesscode
+//   return(ActiveGameByAccessCode[code]);
+// }
+
+// // This returns the contestant object from the their token
+// QMQ.prototype.getContestantFromToken = function(game,token) {
+//   for(var i in game.contestants) {
+//     if(game.contestants[i].token == token) {
+// //      console.log("test token: "+game.contestants[i].token);
+//       return(game.contestants[i]);
+//     }
+//   }
+//   return(false);
+// }
 
 // This removes the contestant object from the list
-QMQ.prototype.removeContestantUsingToken = function(game,token) {
+QMQ.prototype.removeContestantFromGame = function(game,contestant) {
   for(var i in game.contestants) {
-    if(game.contestants[i].token == token) {
+    if(game.contestants[i].cname == contestant.userid) {
       game.contestants.splice(i,1);   // remove from array
     }
   }
@@ -339,17 +366,17 @@ QMQ.prototype.removeContestantUsingToken = function(game,token) {
 QMQ.prototype.registerAnswer = function(game,ans) {
   if(game.cqno == -1) {  // game has ended, so cant accept answer
     console.log("Cannot register - game ended");
-    return null;
+    return -1;
   }
-
+  // console.log("Answer: "+ans.contestant.userid+":"+ans.val);
   let points = checkAnswer(game,ans.val);
   if(points == -1) {  
     console.log("answer received too late");
-    return null;
+    return -1;
   }
-//  console.log("Points: "+points);
+  // console.log("Points: "+points);
   game.contestants.forEach(con => {   // find this contestant using his token and update the answer
-      if(con.token == ans.token) {
+      if(con.cname == ans.contestant.userid) {
         con.answers[game.cqno] = ans.val;
         con.points[game.cqno] = points;
         con.totals += points;
@@ -392,8 +419,9 @@ QMQ.prototype.getContestantScores = function(gname) {
 // Games finished - housekeeping 
 QMQ.prototype.endOfGame = function(name) {
   let game = ActiveGameByName[name];
-  delete ActiveGameByCode[game.accesscode];
+  delete ActiveGameByAccessCode[game.accesscode];
   delete ActiveGameByName[name];
+  delete ActiveGameByGameId[game.gameid];
 }
 
 // check if answer received is correct if so calc points based on time
@@ -402,11 +430,11 @@ QMQ.prototype.endOfGame = function(name) {
 // e.g. if answer is cat then there must be an exact match
 // if answer is mangosteen then up to 4 spelling errors are allowed
 function checkAnswer(game,ans) {
-//  console.log("Ans is: "+ans);
+  // console.log("Ans is: "+ans);
   let q = game.questions[game.cqno];
   let dlmax = q.answer.length;
   let dldist = dlevenshtein(q.answer.toLowerCase(),ans.toLowerCase());
-//  console.log("dl distance: "+dldist);
+  // console.log("dl distance: "+dldist);
   if((q.type='number' && q.answer == ans) ||
     (dlmax <= 3 && q.answer.toLowerCase() == ans.toLowerCase()) ||
     (q.type!='number' && dlmax > 3 && dldist < dlmax/2))
@@ -422,15 +450,27 @@ function checkAnswer(game,ans) {
   return(0);
 }
 
-// creates a random contestant token for for easy identification
-function generateCToken(code) {
+// // creates a random contestant token for for easy identification
+// function generateCToken(code) {
+//   var length = 12,
+//   charset = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789",
+//   retVal = "";
+//   for(var i = 0, n = charset.length; i < length; ++i) {
+//       retVal += charset.charAt(Math.random() * n);
+//   }
+//   return(code+":"+retVal);
+// }
+
+// creates a random number for dymanic game id
+// This is unique per active game, used as the socket id for joining game room
+function generateGameId() {
   var length = 12,
   charset = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ23456789",
   retVal = "";
   for(var i = 0, n = charset.length; i < length; ++i) {
       retVal += charset.charAt(Math.random() * n);
   }
-  return(code+":"+retVal);
+  return(retVal);
 }
 
 //This is the damaerau levenshtein algo copied from dzone.com
