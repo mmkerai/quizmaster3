@@ -24,13 +24,13 @@
 		<h5><span id="version" class="pull-left"></span></h5>
 		<div class="pull-right">
 			<button class="btn btn-info btn-sm" id="username"></button>
-			<button class="btn btn-success btn-sm" id="leave" onclick="cleave()">Signout</button>
+			<button class="btn btn-success btn-sm" id="leave" onclick="cleave()">Leave Game</button>
 		</div>
 		<p>&nbsp;</p>
 	</div> 
 	<p class="messages" id="error"></p>
 	<p class="messages" id="message1"></p>
-	<p class="gtitle" id='gameheader'></p>
+	<p class="gtitle" id="gameheader"></p>
 	<div id='menu' class="button-group">
 		<button type="button" class="btn btn-info" onClick="doJoin()">Join a Quiz</button>
 		<button type="button" class="btn btn-warning" onclick="location.href='admin.html';">Quizmaster Sign In</button>
@@ -88,12 +88,16 @@
 			</p>
 		</div>
 	</div>
+	<div id="gamecontrol">
+		<button class="btn btn-success" onclick="selfPlayNextQuestion()">Next Question</button>
+		<button class="btn btn-warning" onclick="endSelfPlay()">End this game</button>
+	</div>
 	<canvas id="scores" width="100%" height="28"></canvas>
 	<p>&nbsp;</p>
 	<div id="popular">
 		<p class="yanswer">Popular Quizes</p>
 			<table id="poptable">
-			<!-- <tr>
+			<!-- <tr> Below used for testing look and feel. Actual table is created dynamically in js
 				 <td class="popquiz">
 					<div class="gameitem">
 					<img class="gicon" src="images/myquiz1.jpg"/>

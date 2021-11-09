@@ -119,9 +119,9 @@ const QDIFF = {
 const QTYPE = {
     TEXT:'text',MULTICHOICE:'multichoice',NUMBER:'number'};
 
-/* const GTYPE = {
-    PUBQUIZ:'pubquiz',ONEQUIZ:'onequiz',FUNQUIZ:'funquiz'}; */
-const GTYPE = {PUBQUIZ:'pubquiz'};
+const GTYPE = {
+    PUBQUIZ:'pubquiz',SELFPLAY:'selfplay',FUNQUIZ:'funquiz'};
+// const GTYPE = {PUBQUIZ:'pubquiz'};
   
 var ActiveGameByName = new Object();    //list of all active games in play by gamename
 var ActiveGameByAccessCode = new Object();    //list of all accesscodes for active games
@@ -164,6 +164,8 @@ QMQ.prototype.createQMaster = function(qm,ipaddr) {
   return myobj;
 }
 
+// This is used to get a game ready to play
+// i.e. take game details from DB and create a game object
 QMQ.prototype.gameReady = function(qmid,gname,callback) {
   Dbt.getGameByName(qmid,gname,function(game) {
     if(!game)
@@ -184,14 +186,14 @@ QMQ.prototype.gameReady = function(qmid,gname,callback) {
 }
 
 // Like gameReady but for self play
-QMQ.prototype.selfPlayGameReady = function(game,callback) {
-    // this gets question objects based on question ids
-    Dbt.getQuestionsByID(game.questions,function(qs) {
-      let newg = new QMGame(game);
-      newg.questions = qs;  //replace question ids with full details of the questions
-      callback(newg);
-    });
-}
+// QMQ.prototype.selfPlayGameReady = function(game,callback) {
+//     // this gets question objects based on question ids
+//     Dbt.getQuestionsByID(game.questions,function(qs) {
+//       let newg = new QMGame(game);
+//       newg.questions = qs;  //replace question ids with full details of the questions
+//       callback(newg);
+//     });
+// }
 
 // Find the active game before starting
 QMQ.prototype.getActiveGameFromGameId = function(gameid) {
@@ -225,6 +227,17 @@ QMQ.prototype.getQuestionTypes = function() {
 
 QMQ.prototype.getGameTypes = function() {
   return(GTYPE);
+}
+
+QMQ.prototype.setGameType = function(game,type) {
+  game.gametype = GTYPE[type];
+}
+
+QMQ.prototype.isSelfPlayGame = function(game) {
+  if(game.gametype = 'selfplay')
+    return true;
+  else
+    return false;
 }
 
 QMQ.prototype.checkGameTypes = function(gtype) {
@@ -304,18 +317,19 @@ QMQ.prototype.verifyquestion = function(qobj) {
 }
 
 // This returns the game object from the assigned access code
+// Only used after quizmaster has started the game
 QMQ.prototype.getGameFromAccessCode = function(code) {
   return(ActiveGameByAccessCode[code]);    // get game if access code matches
 }
 
 // This is called when starting self play, if public quiz then uses the superadmin (TCC) games
 // otherwise checks the game is valid for the quizmaster
-QMQ.prototype.playSelfGame = function(qmid,accesscode,callback) {
-  Dbt.getGameFromAccesscode(qmid,accesscode, function(game) {
-      callback(game);
-  });
+// QMQ.prototype.getSelfGameFromAccessCode = function(qmid,accesscode,callback) {
+//   Dbt.getGameFromAccesscode(qmid,accesscode, function(game) {
+//       callback(game);
+//   });
 
-}
+// }
 
 // New contestant joins an active game, access code has already beem verified at this stage
 // TODO check max contestants have not been exceeded in the QM object
@@ -400,10 +414,10 @@ QMQ.prototype.getContestantPoints = function(game) {
 }
 
 // get the contestant total scores.
-// Usually called after end of game
-QMQ.prototype.getContestantScores = function(gname) {
+// Usually called after end of game but can be called during mid play
+QMQ.prototype.getContestantScores = function(gameid) {
   let result = [];
-  let game = ActiveGameByName[gname];
+  let game = ActiveGameByGameId[gameid];
   // TODO arrnage in order of points and limit to top 5
   if(game) {
     for(var i in game.contestants) {
@@ -417,11 +431,13 @@ QMQ.prototype.getContestantScores = function(gname) {
 }
 
 // Games finished - housekeeping 
-QMQ.prototype.endOfGame = function(name) {
-  let game = ActiveGameByName[name];
+QMQ.prototype.endOfGame = function(gameid) {
+  let game = ActiveGameByGameId[gameid];
   delete ActiveGameByAccessCode[game.accesscode];
-  delete ActiveGameByName[name];
-  delete ActiveGameByGameId[game.gameid];
+  delete ActiveGameByName[game.gamename];
+  delete ActiveGameByGameId[gameid];
+  console.log("End game: "+game.gamename);
+  game = null;   // release memory ?
 }
 
 // check if answer received is correct if so calc points based on time

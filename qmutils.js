@@ -390,7 +390,7 @@ socket.on('getPopularQuizesResponse',function(quizes) {
  
 //	console.log("mobile is "+maxcol);
 	$('#play').hide();
-	$('#popular').show();
+//	$('#popular').show();
 	var newrow;
 	quizes.forEach(quiz => {
 		pnum++;
@@ -399,7 +399,7 @@ socket.on('getPopularQuizesResponse',function(quizes) {
 		}
 		var node = document.createElement("td");
 		node.setAttribute("class","popquiz");
-		node.setAttribute("onClick","playself('"+quiz.accesscode+"')");
+		node.setAttribute("onClick","playself('"+quiz.gamename+"')");
 		var tdiv = document.createElement("div");
 		tdiv.setAttribute("class","gameitem");
 		var img = document.createElement("img");

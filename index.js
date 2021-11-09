@@ -30,9 +30,16 @@ function doJoin() {
 }
 
 // when user wants to play game by themselves (not via quizmaster)
-function playself(gamecode) {
-	if(confirm("Are you sure you want to play this game?")) {
-		socket.emit('playSelfRequest',gamecode);
+function playself(gamename) {
+	var cname = prompt("Please enter your nickname", "");
+	if(cname == null || cname == "") {
+		return;
+	}
+	else {
+		let contestant = new Object();
+		contestant.userid = cname;
+		contestant.gamename = gamename;
+		socket.emit('playSelfRequest',contestant);	// contestant joining
 	}
 }
 
@@ -51,7 +58,21 @@ function cleave() {
 		socket.emit('conLeaveRequest',contestant);		// tidy up on server
 		deleteCookie("quizmaster");
 	}
-	setDefaultValues();
+	location.reload();
+}
+
+// used during self play for next question
+function selfPlayNextQuestion() {
+	var contestant = JSON.parse(readCookie("quizmaster"));
+	socket.emit("selfPlayNextQuestionRequest",contestant);
+	clearMessages();
+}
+
+// used during self play to end early
+function endSelfPlay() {
+	var contestant = JSON.parse(readCookie("quizmaster"));
+	socket.emit("selfPlayEndGameRequest",contestant);
+	clearMessages();
 }
 
 socket.on('joinGameResponse',function(contestant) {
@@ -62,18 +83,10 @@ socket.on('joinGameResponse',function(contestant) {
 	$('#username').text(contestant.userid);
 	$('#username').show();
 	$('#leave').show();
-	$('#gameheader').text("You have joined: "+contestant.gamename);
+	$('#gameheader').text("You are playing quiz: "+contestant.gamename);
+	$('#gameheader').show();
+//	console.log("Contestant: "+JSON.stringify(contestant));
 	saveCookie("quizmaster",JSON.stringify(contestant),1800);	// save credentials for 30 mins
-});
-
-// Like joinGameResponse but for self play
-socket.on('playSelfResponse',function(sgame) {
-	$('#joingamex').hide();
-	$('#popular').hide();
-	$('#menu').hide();
-	$('#play').show();
-	$('#leave').show();
-	$('#gameheader').text("You have joined: "+sgame.gamename);
 });
 
 socket.on('currentQuestionUpdate',function(qobject) {
@@ -83,6 +96,7 @@ socket.on('currentQuestionUpdate',function(qobject) {
 	$('#yourans').hide();
 	$('#yourpts').hide();
 	$('#scores').hide();
+	$('#gamecontrol').hide();
 	if(qobject.length == 0) {
 		clearMessages();
 		$('#qaform').hide();
@@ -97,6 +111,7 @@ socket.on('currentQuestionUpdate',function(qobject) {
 		$('#question').show();
 		$('#sbutton').show();
 	}
+	$('#qanswer').focus();
 });
 
 socket.on('multichoice',function(arr) {
@@ -121,6 +136,7 @@ socket.on('correctAnswer',function(message) {
 	$('#correctans').show();
 	$('#yourans').show();
 	$('#yourpts').show();
+	$('#gamecontrol').show();
 	$('#qimage').hide();
 	$('#mchoice').hide();
 });
@@ -132,6 +148,12 @@ socket.on('submitAnswerResponse',function(ans) {
 	$('#yourans').show();
 	$('#sbutton').hide();
 	$('#mchoice').hide();
+});
+
+socket.on('selfPlayEndGameResponse', function() {
+	$('#qheader').text("End of Game");
+	deleteCookie("quizmaster");
+	setTimeout(location.reload(), 2000);	// refresh after a short time
 });
 
 // submit a text or num answer with contestant details
@@ -157,6 +179,7 @@ function setDefaultValues() {
 	$('#username').hide();
 	$('#game').hide();
 	$('#play').hide();
+	$('#gamecontrol').hide();
 	$('#qaform').hide();
 	$('#mchoice').hide();
 	$('#correctans').hide();
@@ -167,6 +190,7 @@ function setDefaultValues() {
 	$('#menu').show();
 	$('#pjoinmsg').show();
 	$('#users').show();
+	$('#popular').show();
 	var contestant = JSON.parse(readCookie("quizmaster"));
 	if(contestant)
 		$('#leave').show();

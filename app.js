@@ -307,21 +307,6 @@ socket.on('getGameQuestionsRequest',function(qmid,gname) {
     });
   });
 
-// This is used to start playing self game.
-socket.on('playSelfRequest',function(accesscode) {
-  var qmid = SUPERADMIN;
-  qmt.playSelfGame(qmid,accesscode,function(game) {
-    if(!game)
-      socket.emit("errorResponse","Game not found with accesscode: "+accesscode);
-    else {
-      qmt.selfPlayGameReady(game,function(sgame) {
-        socket.join(sgame.gameid);
-        socket.emit('playSelfResponse',sgame);
-        selfPlayPreQuestion(socket,sgame);
-      });
-    }
-  });
-});
 
 /* This func checks game params are valid and then creates DB entry.
  * game object fields:
@@ -423,10 +408,25 @@ socket.on('playSelfRequest',function(accesscode) {
     }
   });
 
+// used to show next question during self play only
+socket.on('selfPlayNextQuestionRequest',function(contestant) {
+  if(!contestant || !contestant.userid || !contestant.gameid)
+    return(socket.emit("errorResponse","Problem playing this game"));
+
+  let game = qmt.getActiveGameFromGameId(contestant.gameid);
+  if(game) {
+    game.cqno++;
+    preQuestion(game);
+  }
+  else {
+    socket.emit("errorResponse","Game not active or has finished");
+  }
+});
+
 // called by quizmaster to show latest scores
-  socket.on('showScoresRequest',function(qmid,gname) {
+  socket.on('showScoresRequest',function(qmid,gameid) {
     if(!validUser(socket,qmid)) return;
-    let scores = qmt.getContestantScores(gname);   // current scores
+    let scores = qmt.getContestantScores(gameid);   // current scores
 // Test to see how score is displayed
 /*     let scores = [];
     for(var i=0; i < 4; i++) {
@@ -436,7 +436,7 @@ socket.on('playSelfRequest',function(accesscode) {
       scores.push(c);
     } */
     if(scores) {
-      io.in(gname).emit('scoresUpdate',scores);
+      io.in(gameid).emit('scoresUpdate',scores);
     }
     else {
       socket.emit("errorResponse","Game not active");
@@ -444,11 +444,18 @@ socket.on('playSelfRequest',function(accesscode) {
   });
 
   // called by quizmaster to end the game
-  socket.on('endGameRequest',function(qmid,gamename) {
+  socket.on('endGameRequest',function(qmid,gameid) {
     if(!validUser(socket,qmid)) return;
-    qmt.endOfGame(gamename); //housekeeping
-    io.in(gamename).emit('announcement','Quizmaster has ended the game!');
-    socket.emit("endGameResponse",gamename);
+    qmt.endOfGame(gameid); //housekeeping
+    io.in(gameid).emit('announcement','Quizmaster has ended the game!');
+    socket.emit("endGameResponse",gameid);
+  });
+
+  // called by contestant to end the game
+  socket.on('selfPlayEndGameRequest',function(contestant) {
+    qmt.endOfGame(contestant.gameid); //housekeeping
+    io.in(contestant.gameid).emit('announcement','Game ended');
+    socket.emit("selfPlayEndGameResponse","");
   });
 
 // Get the pre-loaded quizes in case user does not want to create their own
@@ -516,10 +523,36 @@ socket.on('getPopularQuizesRequest',function() {
     }
   });
 
+// This is used to start playing self game.
+socket.on('playSelfRequest',function(contestant) {
+  if(!contestant.userid || !contestant.gamename)
+    return(socket.emit("errorResponse","Problem playing this game"));
+
+  var qmid = SUPERADMIN;
+  // qmt.getSelfGameFromAccessCode(qmid,contestant.accesscode,function(game) {
+  //   if(!game)
+  //     socket.emit("errorResponse","Game not found with accesscode: "+accesscode);
+  //   else {
+      qmt.gameReady(qmid,contestant.gamename,function(sgame) {
+        if(!sgame)
+          return(socket.emit("errorResponse","Game not found: "+contestant.gamename));
+ 
+        qmt.setGameType(sgame,"SELFPLAY");    // so questions are controlled bu player not the quizmaster
+        const con = qmt.joinGame(sgame,contestant);  // adds contestant to the game and return his details
+        contestant.accesscode = sgame.accesscode;  // set the game accesscode back for front end UI
+        contestant.gameid = sgame.gameid;   // unique game that this contestenant has just joined
+        console.log(contestant.userid+" Joining game "+sgame.gamename);
+        socket.join(sgame.gameid);
+        socket.emit("joinGameResponse",contestant); // confirm back to contestant
+//        socket.emit('playSelfResponse',sgame);
+        preQuestion(sgame);
+      });
+  });
+
   // Send announcement to all contestants
-  socket.on('announcementRequest',function(qmid,gamename,msg) {
+  socket.on('announcementRequest',function(qmid,gameid,msg) {
     if(!validUser(socket,qmid)) return;
-    io.in(gamename).emit('announcement',msg);
+    io.in(gameid).emit('announcement',msg);
 //    console.log("Announcement: "+msg);
   });
 
@@ -566,7 +599,7 @@ socket.on('getPopularQuizesRequest',function() {
 /* Functions below this point
 ********************************************/
 function removeSocket(id,evname) {
-		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
+//		console.log("Socket "+id+" "+evname+" at "+ new Date().toISOString());
     delete AUTHUSERS[id];
 }
 
@@ -617,15 +650,15 @@ function preQuestion(game) {
   io.in(game.gameid).emit('audioUpdate',{action: 'start',type:'prequestion'});
 }
 
-// prepare to countdown before each question
-function selfPlayPreQuestion(socket,game) {
-  socket.emit('announcement','Get ready!');
-  socket.emit('currentQuestionUpdate','');
-  game.answers = 0;   // reset the no of answers received
-  socket.emit('answersUpdate',game.answers);
-  setTimeout(gcountdown,1000,game,GCOUNTDOWNTIME);
-  socket.emit('audioUpdate',{action: 'start',type:'prequestion'});
-}
+// // prepare to countdown before each question
+// function selfPlayPreQuestion(socket,game) {
+//   socket.emit('announcement','Get ready!');
+//   socket.emit('currentQuestionUpdate','');
+//   game.answers = 0;   // reset the no of answers received
+//   socket.emit('answersUpdate',game.answers);
+//   setTimeout(gcountdown,1000,game,GCOUNTDOWNTIME);
+//   socket.emit('audioUpdate',{action: 'start',type:'prequestion'});
+// }
 
 // count down before start of each question. Once coundown hits 0, show the question
 function gcountdown(game,time) {
@@ -681,11 +714,24 @@ function endQuestion(game) {
   io.in(game.gameid).emit('correctAnswer',game.questions[game.cqno].answer);
   let points = qmt.getContestantPoints(game);
 //  Show all scores for this question
-//  io.in(game.gameid).emit('scoresUpdate',points);
+// io.in(game.gameid).emit('scoresUpdate',points);
   if((game.cqno+1) >= game.numquestions) {    // been through all questions
-    io.in(game.gameid).emit('endOfGame','');
+    if(qmt.isSelfPlayGame(game)) {  //handle differently if self play
+      io.in(game.gameid).emit('announcement',"End of Game");
+      let scores = qmt.getContestantScores(game.gameid);   // current scores
+      if(scores)
+        io.in(game.gameid).emit('scoresUpdate',scores);
+    } 
+    else    // normal game controlled by quizmaster
+      io.in(game.gameid).emit('endOfGame','');
   }
   else {
-    io.in(game.gameid).emit('announcement','Please wait for the next question');
+    var str;
+    if(qmt.isSelfPlayGame(game))
+      str = "Click 'next question' to continue";
+    else
+      str = "Please wait for the next question";
+
+    io.in(game.gameid).emit('announcement',str);
   }
 }

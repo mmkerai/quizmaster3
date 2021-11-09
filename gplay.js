@@ -50,8 +50,8 @@ function setDefaultValues() {
 }
 
 function cancelPlay() {
-	$('#play'+gid).remove();		// remove tab content
-	$('#'+gid).remove();			// remove tab label
+	$('#play'+gname).remove();		// remove tab content
+	$('#'+gname).remove();			// remove tab label
 	$('#admin-tab').click();
 //	document.getElementById(gid).remove();
 }
