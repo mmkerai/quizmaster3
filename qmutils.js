@@ -7,7 +7,7 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.96";
+const version = "QM v0.97";
 var auth2; // The Sign-In object.
 var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');

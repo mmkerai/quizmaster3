@@ -56,16 +56,16 @@
 		<p id="pjoinmsg" class="messages">Players joined:</p>
 		<p id="users"></p>
 		<p class="qheader" id="qheader"></p>
-		<p class="qclass" id="question"></p>
+		<div class="qclass" id="question"></div>
 		<div class="countdown" id="timer"></div>
 		<audio id="countdownsound">   
 			<source src="audio/countdown.mp3"/> 
-		</audio>  
+		</audio>
 		<p><img id='qimage'></p>
 		<p>&nbsp;</p>
 		<div id="qaform" class="form-group">
 			<form id="ansform">
-			<div class="col-xs-5">
+			<div class="col-xs-10">
 				<input type="text" class="form-control" id="qanswer" placeholder="Your Answer"/>
 			</div>
 			<div id="sbutton" class="col-xs-2">
@@ -94,7 +94,7 @@
 	</div>
 	<canvas id="scores" width="100%" height="28"></canvas>
 	<p>&nbsp;</p>
-	<div id="popular">
+	<div id="popular"> 
 		<p class="yanswer">Popular Quizes</p>
 			<table id="poptable">
 			<!-- <tr> Below used for testing look and feel. Actual table is created dynamically in js
