@@ -78,6 +78,20 @@
 	font-size: 1.5em
 }
 
+.ypoints {
+	color: green;
+	font-family: Arial,Helvetica,sans-serif;
+	font-style: bold;
+	font-size: 1.2em
+}
+
+.ytotal {
+	color: black;
+	font-family: Arial,Helvetica,sans-serif;
+	font-style: bold;
+	font-size: 1.5em
+}
+
 .popquiz {
 /*	margin: 12px 42px 12px 12px; */
 	padding: 12px 32px 12px 32px;

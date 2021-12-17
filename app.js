@@ -707,21 +707,21 @@ function qcountdown(game,time) {
 }
 
 // question has finished, clear question and prepare for the next one
-function endQuestion(game) {
+function endQuestion(game) { 
   io.in(game.gameid).emit('currentQuestionUpdate',"");
   io.in(game.gameid).emit('image',"");
   io.in(game.gameid).emit('timeUpdate',"");
   io.in(game.gameid).emit('correctAnswer',game.questions[game.cqno].answer);
-  let points = qmt.getContestantPoints(game);
+//  let points = qmt.getContestantPoints(game);
 //  Show all scores for this question
 // io.in(game.gameid).emit('scoresUpdate',points);
   if((game.cqno+1) >= game.numquestions) {    // been through all questions
     if(qmt.isSelfPlayGame(game)) {  //handle differently if self play
       io.in(game.gameid).emit('announcement',"End of Game");
-      let scores = qmt.getContestantScores(game.gameid);   // current scores
+      let scores = qmt.getContestantScores(game.gameid);   // latest scores
       if(scores)
-        io.in(game.gameid).emit('scoresUpdate',scores);
-    } 
+        io.in(game.gameid).emit('selfPlayTotal',scores[0].points); // for selfplay should only have one entry
+    }
     else    // normal game controlled by quizmaster
       io.in(game.gameid).emit('endOfGame','');
   }

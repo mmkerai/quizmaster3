@@ -31,7 +31,7 @@ function doJoin() {
 
 // when user wants to play game by themselves (not via quizmaster)
 function playself(gamename) {
-	var cname = prompt("Please enter your nickname", "");
+	var cname = prompt("Please enter your nickname to start playing", "");
 	if(cname == null || cname == "") {
 		return;
 	}
@@ -95,6 +95,7 @@ socket.on('currentQuestionUpdate',function(qobject) {
 	$('#correctans').hide();
 	$('#yourans').hide();
 	$('#yourpts').hide();
+	$('#totalpts').hide();
 	$('#scores').hide();
 	$('#gamecontrol').hide();
 	if(qobject.length == 0) {
@@ -130,7 +131,7 @@ socket.on('image',function(im) {
 	$('#qimage').attr('src',im);
 	$('#qimage').show();
 });
-
+ 
 socket.on('correctAnswer',function(message) {
 	$('#correctans').text("Correct answer: "+message);
 	$('#correctans').show();
@@ -148,6 +149,13 @@ socket.on('submitAnswerResponse',function(ans) {
 	$('#yourans').show();
 	$('#sbutton').hide();
 	$('#mchoice').hide();
+});
+
+// Show running total after each question/answer
+socket.on('selfPlayTotal', function(points) {
+	$('#total').text(points);
+	$('#totalpts').show();
+	$('#gamecontrol').hide();
 });
 
 socket.on('selfPlayEndGameResponse', function() {
@@ -185,6 +193,7 @@ function setDefaultValues() {
 	$('#correctans').hide();
 	$('#yourans').hide();
 	$('#yourpts').hide();
+	$('#totalpts').hide();
 	$('#scores').hide();
 	$('#gameheader').hide();
 	$('#menu').show();
