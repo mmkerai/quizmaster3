@@ -12,22 +12,20 @@ var CollQuestions = 0;
 var CollQmasters = 0;
 var CollGames = 0;
 
-function DB() {
-  const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
-  client.connect(err => {
-    if(err)
-      console.log("MongoDB: "+err);
-    else {
-      console.log("MongoDB connected");
-      CollApps = client.db(DBNAME).collection(Apps);
-      CollQuestions = client.db(DBNAME).collection(Questions);
-      CollQmasters = client.db(DBNAME).collection(Qmasters);
-      CollGames = client.db(DBNAME).collection(CollQMGame);
+const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
+client.connect(err => {
+  if(err)
+    console.log("MongoDB: "+err);
+  else {
+    console.log("MongoDB connected");
+    CollApps = client.db(DBNAME).collection(Apps);
+    CollQuestions = client.db(DBNAME).collection(Questions);
+    CollQmasters = client.db(DBNAME).collection(Qmasters);
+    CollGames = client.db(DBNAME).collection(CollQMGame);
 
 //      listDatabases(client);
-    }
-  });
-}
+  }
+});
 
 function listDatabases(client){
   client.db(DBNAME).listCollections().toArray(function(err, names) {
@@ -36,7 +34,7 @@ function listDatabases(client){
   });
 };
 
-DB.prototype.createApp = function(appobj,socket) {
+const createApp = function(appobj,socket) {
   CollApps.insertOne(appobj, function(err, res) {
     if (err) throw err;
     console.log("Inserted into collection Apps:" +res);
@@ -44,7 +42,7 @@ DB.prototype.createApp = function(appobj,socket) {
   });
 }
 
-DB.prototype.newQMaster = function(qmobj,callback) {
+const newQMaster = function(qmobj,callback) {
   CollQmasters.insertOne(qmobj, function(err, res) {
     if (err) throw err;
     console.log("Inserted into collection Qmaster:" +res);
@@ -53,7 +51,7 @@ DB.prototype.newQMaster = function(qmobj,callback) {
 }
 
 // check if the QMaster exist based on his id.
-DB.prototype.checkQMaster = function(uid,callback) {
+const checkQMaster = function(uid,callback) {
   CollQmasters.find({qmid: uid}).toArray(function(err,result) {
     if (err) throw err;
 //    console.log("Check QMaster: "+result);
@@ -65,7 +63,7 @@ DB.prototype.checkQMaster = function(uid,callback) {
 }
 
 // Insert a new question (document) in the questions collection
-DB.prototype.insertQuestion = function(qobj) {
+const insertQuestion = function(qobj) {
   CollQuestions.insertOne(qobj, function(err, res) {
     if (err) throw err;
 //    console.log("1 question inserted:" +res.insertedId);
@@ -73,7 +71,7 @@ DB.prototype.insertQuestion = function(qobj) {
 }
 
 // update a question (document) with same qid
-DB.prototype.updateQuestion = function(qobj,callback) {
+const updateQuestion = function(qobj,callback) {
   CollQuestions.updateOne(
     {qid: Number(qobj.qid)}, 
     {$set: {
@@ -84,8 +82,6 @@ DB.prototype.updateQuestion = function(qobj,callback) {
         "question" : qobj.question,
         "difficulty" : qobj.difficulty,
         "answer" : qobj.answer
-/*         "used" : qobj.used,    // these shouldn't be reset
-        "correct" : qobj.correct */
       }
     },
     function(err, res) {
@@ -100,7 +96,7 @@ DB.prototype.updateQuestion = function(qobj,callback) {
 }
 
 // Gets total number of questions
-DB.prototype.getNumQuestions = function(callback) {
+const getNumQuestions = function(callback) {
   CollQuestions.countDocuments({},function(err,result) {
 		if (err) throw err;
     callback(result);
@@ -109,7 +105,7 @@ DB.prototype.getNumQuestions = function(callback) {
 
 // Gets number of question per category
 // Not sure why it is needed
-DB.prototype.getNumQuestionsByCat = function(cat,socket) {
+const getNumQuestionsByCat = function(cat,socket) {
   CollQuestions.countDocuments({category: cat},function(err,result) {
 		if (err) throw err;
     socket.emit('infoResponse',result);
@@ -118,7 +114,7 @@ DB.prototype.getNumQuestionsByCat = function(cat,socket) {
 
 // Clear the questions collection
 // Used to load fresh questions - at start only
-DB.prototype.clearAllQuestions = function() {
+const clearAllQuestions = function() {
   CollQuestions.deleteMany({},function(err,result) {
 		if (err) throw err;
     console.log("Collection QMQuestion Deleted OK");
@@ -126,7 +122,7 @@ DB.prototype.clearAllQuestions = function() {
 }
 
 // Gets quizmaster object based on his name
-DB.prototype.getQMByName = function(qname,callback) {
+const getQMByName = function(qname,callback) {
   CollQmasters.find({"qmname": qname}).toArray(function(err,result) {
     if(err) console.log("QM not found: "+qname);
     if(typeof result != "undefined" && result.length > 0) {
@@ -136,16 +132,7 @@ DB.prototype.getQMByName = function(qname,callback) {
   });
 }
 
-// This should not be called with PROD data as it is too long
-/* DB.prototype.getQuestions = function(callback) {
-//  console.log("Getting question");
-  CollQuestions.find({}).toArray(function(err,result) {
-    if (err) console.log("No questions"); 
-    callback(result);
-  });
-} */
-
-DB.prototype.getQuestionsByCat = function(cat,callback) {
+const getQuestionsByCat = function(cat,callback) {
 //  console.log("Getting question for "+cat);
   CollQuestions.find({category:cat}).toArray(function(err,result) {
     if (err) console.log("No questions for: "+cat); 
@@ -153,7 +140,7 @@ DB.prototype.getQuestionsByCat = function(cat,callback) {
   });
 }
   
-DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,callback) {
+const getQuestionsByCatandSubcat = function(cat,subcat,callback) {
 //  console.log("Getting question for "+cat+":"+subcat);
   CollQuestions.find({category:cat,subcategory:subcat}).toArray(function(err,result) {
 		if (err) console.log("No questions for: "+cat+" & "+subcat); 
@@ -161,7 +148,7 @@ DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,callback) {
   });
 }
 
-DB.prototype.getQuestionById = function(id,callback) {
+const getQuestionById = function(id,callback) {
   console.log("Getting question id "+id);
   CollQuestions.find({qid:Number(id)}).toArray(function(err,result) {
     if (err) console.log("No question with id: "+id);
@@ -170,7 +157,7 @@ DB.prototype.getQuestionById = function(id,callback) {
   });
 }
 
-DB.prototype.getGames = function(id,callback) {
+const getGames = function(id,callback) {
 //  console.log("Getting Games for: "+id);
   CollGames.find({qmid:id}).toArray(function(err,result) {
     if (err) {
@@ -183,7 +170,7 @@ DB.prototype.getGames = function(id,callback) {
 }
 
 // Check if game exists in games collection
-DB.prototype.gameExists = function(game,callback) {
+const gameExists = function(game,callback) {
   CollGames.findOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
     if (err) throw err;
 //    console.log("Res: "+ JSON.stringify(res));
@@ -195,7 +182,7 @@ DB.prototype.gameExists = function(game,callback) {
 }
 
 // Insert a new game in the games collection
-DB.prototype.createNewGame = function(game,callback) {
+const createNewGame = function(game,callback) {
   game.accesscode = generateAccesscode();
   CollGames.insertOne(game, function(err, res) {
     if (err) throw err;
@@ -207,7 +194,7 @@ DB.prototype.createNewGame = function(game,callback) {
 }
 
 // Update a game in the games collection
-DB.prototype.updateGame = function(game,callback) {
+const updateGame = function(game,callback) {
   let obj = new Object();
   obj.$set = game;
   // object should end up like {$set: {qmid: 123xxx, gamename: xxxx, etc}}
@@ -221,7 +208,7 @@ DB.prototype.updateGame = function(game,callback) {
 }
 
 // Delete a game in the games collection
-DB.prototype.deleteGame = function(game,callback) {
+const deleteGame = function(game,callback) {
   CollGames.deleteOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
 //    console.log("Res: "+ JSON.stringify(res));
     if (err) throw err;
@@ -230,7 +217,7 @@ DB.prototype.deleteGame = function(game,callback) {
 }
 
 // get game details from DB to start or edit the game
-DB.prototype.getGameByName = function(id,name,callback) {
+const getGameByName = function(id,name,callback) {
   CollGames.find({qmid:id,gamename:name}).toArray(function(err, results) {
     if (err) throw err;
     callback(results[0]);
@@ -238,7 +225,7 @@ DB.prototype.getGameByName = function(id,name,callback) {
 }
 
 // get game details from DB to start or edit the game
-DB.prototype.getQuestionsByID = function(qlist,callback) {
+const getQuestionsByID = function(qlist,callback) {
   var arr = [];
   qlist.forEach(function (id,index) {
     let obj = new Object();
@@ -256,7 +243,7 @@ DB.prototype.getQuestionsByID = function(qlist,callback) {
 }
 
 // get game from access code. used for selfplay
-DB.prototype.getGameFromAccesscode = function(qmid,ac,callback) {
+const getGameFromAccesscode = function(qmid,ac,callback) {
   CollGames.findOne({qmid:qmid,accesscode:ac}, function(err, res) {
     if (err) throw err;
 //    console.log("Game: "+ JSON.stringify(res));
@@ -276,138 +263,24 @@ function generateAccesscode() {
   return retVal;
 }
 
-/* functions below are for use with SQL database */
-/*
-DB.prototype.getQMByEmail = function(obj,socket) {
-  let checkqm = "SELECT * FROM "+DBNAME+"."+QMTable+" WHERE qmemail='"+obj.email+"'";
-  pool.query(checkqm, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results.length > 0) {
-      console.log("Quizmaster Exists OK ");
-//      AUTHUSERS[socket.id] = obj.email;
-      socket.emit('loginResponse',obj.name);
-    }
-    else {
-      console.log("QM does not exist");
-      socket.emit('errorResponse',obj.name);
-    }
-  });
-}
 
-DB.prototype.createNewQM = function(obj,socket) {
-  let qmaster = "INSERT INTO "+DBNAME+"."+QMTable+" VALUES (0,'"+
-                  obj.sub+"','"+
-                  obj.name+"','"+
-                  obj.email+"','"+
-                  '1234567'+"','"+
-                  '1234567'+"','"+
-                  new Date().toISOString()+"');";
-  pool.query(qmaster, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results) {
-      console.log("New Quizmaster Registered OK");
-      socket.emit('registerQMResponse',results);
-    }
-  });
-}
-
-DB.prototype.createNewGame = function(obj,socket) {
-  let acode = generateAccesscode();
-  let query = "INSERT INTO "+DBNAME+"."+GameTable+" VALUES (0,'"+
-                  obj.qmid+"','"+
-                  obj.numquestions+"','"+
-                  obj.timelimit+"','"+
-                  obj.gamename+"','"+
-                  obj.gametype+"','"+
-                  acode+"','"+
-                  obj.questions+"');";
-  pool.query(query, function(err, results, fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results) {
-      console.log("New Game Created OK");
-      socket.emit('newGameResponse',results);
-    }
-  });
-}
-
-DB.prototype.getGameByID = function(qmid,gameid,callback) {
-  let query = "SELECT * FROM "+DBNAME+"."+GameTable+" WHERE qmid='"+qmid+"' AND gameid='"+gameid+"'";
-  pool.query(query,function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results.length > 0) {
-//      console.log("Getting game ID "+JSON.stringify(results));
-      callback(results[0]);
-    }
-    else {
-      console.log("No game ID: "+gameid);
-    }
-  });
-}
-
-DB.prototype.getQuestionByID = function(qid,callback) {
-  let query = "SELECT * FROM "+DBNAME+"."+QTable+" WHERE qid='"+qid+"'";
-    pool.query(query,function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-      return;
-    }
-    if(results.length > 0) {
-      callback(results[0]);   // should only be one question returned for each id
-    }
-    else {
-      console.log("No question ID: "+qid);
-    }
-  });
-}
-
-// This function gets the list of questions from the question table in an array all in one query
-// unlike above function which only returns one question at a time
-DB.prototype.getQuestionsByID = function(qlist,callback) {
-  let array = JSON.parse("[" + qlist + "]");
-  let qstr = " WHERE qid="+array[0];
-  for(var i=1;i < array.length;i++) {
-    qstr = qstr + " OR qid="+array[i];
-  }
-//  console.log("Q query = "+qstr);
-  let query = "SELECT * FROM "+DBNAME+"."+QTable+qstr;
-    pool.query(query,function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-      return;
-    }
-    if(results.length > 0) {
-      callback(results);   // list of questions
-    }
-    else {
-      console.log("No question ID: "+qlist);
-    }
-  });
-}
-
-DB.prototype.getQuestionsByCatandSubcat = function(cat,subcat,socket) {
-  console.log("Getting question for "+cat+":"+subcat);
-  let query = "SELECT * FROM "+DBNAME+"."+QTable+" WHERE category='"+cat+"' AND subcategory='"+subcat+"'";
-  pool.query(query, function(err,results,fields) {
-    if(err) {
-      console.log("DB error: "+err.message);
-    }
-    if(results.length > 0) {
-      socket.emit("getQuestionsResponse",results);
-    }
-    else {
-      console.log("No questions");
-      socket.emit('errorResponse',"No questions");
-    }
-  });
-}
-*/
-
-module.exports = DB;
+exports.checkQMaster = checkQMaster;
+exports.getGames = getGames;
+exports.createApp = createApp;
+exports.newQMaster = newQMaster;
+exports.insertQuestion = insertQuestion;
+exports.updateQuestion = updateQuestion;
+exports.getNumQuestions = getNumQuestions;
+exports.getNumQuestionsByCat = getNumQuestionsByCat;
+exports.clearAllQuestions = clearAllQuestions;
+exports.getQMByName = getQMByName;
+exports.getQuestionsByCat = getQuestionsByCat;
+exports.getQuestionsByCatandSubcat = getQuestionsByCatandSubcat;
+exports.getQuestionById = getQuestionById;
+exports.gameExists = gameExists;
+exports.createNewGame = createNewGame;
+exports.updateGame = updateGame;
+exports.deleteGame = deleteGame;
+exports.getGameByName = getGameByName;
+exports.getQuestionsByID = getQuestionsByID;
+exports.getGameFromAccesscode = getGameFromAccesscode;

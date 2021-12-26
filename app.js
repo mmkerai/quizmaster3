@@ -16,10 +16,9 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 }));
 
 io.set('heartbeat timeout',20000);
-const db = require('./DBfunctions.js');
+const dbt = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 //require('@google-cloud/debug-agent').start();
-var dbt = new db();
 var qmt = new qm();
 
 //********** set the port to use

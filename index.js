@@ -1,7 +1,6 @@
 /*
 *	Quizmaster Home page
 */
-
 var QM = new Object();
 var Questions = [];
 var Marray = [];

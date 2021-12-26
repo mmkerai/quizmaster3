@@ -1,8 +1,8 @@
 // This file contains all Questions Functions
 require('dotenv').config();
 //const dl = require('damerau-levenshtein-js');
-const db = require('./DBfunctions.js');
-var Dbt = new db();
+const Dbt = require('./DBfunctions.js');
+
 class QMApp {
   constructor(name,email,url,ip,hpwd) {
     this.appname = name;
