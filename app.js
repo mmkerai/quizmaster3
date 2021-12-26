@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
-io.set('heartbeat timeout',20000);
+io.set('heartbeat timeout',60000);
 const dbt = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 //require('@google-cloud/debug-agent').start();
