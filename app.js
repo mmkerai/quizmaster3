@@ -1,5 +1,6 @@
-/* Node.js test
- * This script should run under Node.js on local server
+/* Quizmaster
+ * This script should run under Node.js on local server or GCloud
+ * Updated 18th July 2023
  */
 var http = require('http');
 var bodyParser = require('body-parser');
@@ -15,7 +16,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
-io.set('heartbeat timeout',60000);
+//io.set('heartbeat timeout',60000);
 const dbt = require('./DBfunctions.js');
 const qm = require('./QMfunctions.js');
 //require('@google-cloud/debug-agent').start();
@@ -41,6 +42,8 @@ const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 const IMAGEURLBASE = "http://tropicalfruitandveg.com/quizmaster/";
 const GAMEDESCLENGTH = 96;    // length of the game description
 const DEFAULTGAMEICON = "images/myquiz.jpg";
+dbt.initialiseMongoDB();    // Connect to Mongo DB
+
 
 app.get('/*', function(req, res){
 	res.sendFile(__dirname + req.path);

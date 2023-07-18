@@ -11,21 +11,24 @@ var CollApps = 0;
 var CollQuestions = 0;
 var CollQmasters = 0;
 var CollGames = 0;
-
 const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
-client.connect(err => {
-  if(err)
-    console.log("MongoDB: "+err);
-  else {
-    console.log("MongoDB connected");
-    CollApps = client.db(DBNAME).collection(Apps);
-    CollQuestions = client.db(DBNAME).collection(Questions);
-    CollQmasters = client.db(DBNAME).collection(Qmasters);
-    CollGames = client.db(DBNAME).collection(CollQMGame);
 
-//      listDatabases(client);
-  }
-});
+const initialiseMongoDB = function() {
+  console.log("Connecting to: "+DBNAME+" and URI: "+URI);
+  client.connect(err => {
+    if(err)
+      console.log("MongoDB: "+err);
+    else {
+      console.log("MongoDB connected");
+      CollApps = client.db(DBNAME).collection(Apps);
+      CollQuestions = client.db(DBNAME).collection(Questions);
+      CollQmasters = client.db(DBNAME).collection(Qmasters);
+      CollGames = client.db(DBNAME).collection(CollQMGame);
+
+      // listDatabases(client);
+    }
+  });
+}
 
 function listDatabases(client){
   client.db(DBNAME).listCollections().toArray(function(err, names) {
@@ -264,23 +267,25 @@ function generateAccesscode() {
 }
 
 
-exports.checkQMaster = checkQMaster;
-exports.getGames = getGames;
-exports.createApp = createApp;
-exports.newQMaster = newQMaster;
-exports.insertQuestion = insertQuestion;
-exports.updateQuestion = updateQuestion;
-exports.getNumQuestions = getNumQuestions;
-exports.getNumQuestionsByCat = getNumQuestionsByCat;
-exports.clearAllQuestions = clearAllQuestions;
-exports.getQMByName = getQMByName;
-exports.getQuestionsByCat = getQuestionsByCat;
-exports.getQuestionsByCatandSubcat = getQuestionsByCatandSubcat;
-exports.getQuestionById = getQuestionById;
-exports.gameExists = gameExists;
-exports.createNewGame = createNewGame;
-exports.updateGame = updateGame;
-exports.deleteGame = deleteGame;
-exports.getGameByName = getGameByName;
-exports.getQuestionsByID = getQuestionsByID;
-exports.getGameFromAccesscode = getGameFromAccesscode;
+module.exports = {initialiseMongoDB,
+                checkQMaster,
+                getGames,
+                createApp,
+                newQMaster,
+                insertQuestion,
+                updateQuestion,
+                getNumQuestions,
+                getNumQuestionsByCat,
+                clearAllQuestions,
+                getQMByName,
+                getQuestionsByCat,
+                getQuestionsByCatandSubcat,
+                getQuestionById,
+                gameExists,
+                createNewGame,
+                updateGame,
+                deleteGame,
+                getGameByName,
+                getQuestionsByID,
+                getGameFromAccesscode
+              };

@@ -1,12 +1,12 @@
 {
   "name": "quizmaster",
-  "description": "Test using sockets for Google App Engine Standard Environment.",
+  "description": "Quizmaster for Google App Engine Standard Environment.",
   "version": "0.0.1",
   "private": true,
   "license": "Apache-2.0",
   "author": "Manji Kerai",
   "engines": {
-    "node": ">=8"
+    "node": ">=18"
   },
   "scripts": {
     "deploy": "gcloud app deploy",
