@@ -16,7 +16,7 @@ $(document).ready(function() {
 		event.preventDefault();
 	});
 
-	socket.emit("getPopularQuizesRequest","");
+	// socket.emit("getPopularQuizesRequest","");
 });
 
 function doJoin() {

@@ -1,6 +1,6 @@
 // This file contains all Mongo DB Functions
 require('dotenv').config();
-const MongoClient = require('mongodb').MongoClient;
+const {MongoClient} = require('mongodb');
 const Questions = "QMQuestion";
 const Apps = "QMApp";
 const Qmasters = "QMaster";
@@ -13,7 +13,7 @@ var CollQmasters = 0;
 var CollGames = 0;
 const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
 
-const initialiseMongoDB = function() {
+initialiseMongoDB = function() {
   console.log("Connecting to: "+DBNAME+" and URI: "+URI);
   client.connect(err => {
     if(err)

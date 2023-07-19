@@ -2,6 +2,7 @@
  * This script should run under Node.js on local server or GCloud
  * Updated 18th July 2023
  */
+require('dotenv').config();
 var http = require('http');
 var bodyParser = require('body-parser');
 var app = require('express')();
@@ -42,8 +43,8 @@ const GCOUNTDOWNTIME = 5;   // countdown in seconds before each question
 const IMAGEURLBASE = "http://tropicalfruitandveg.com/quizmaster/";
 const GAMEDESCLENGTH = 96;    // length of the game description
 const DEFAULTGAMEICON = "images/myquiz.jpg";
-dbt.initialiseMongoDB();    // Connect to Mongo DB
 
+dbt.initialiseMongoDB();    // Connect to Mongo DB
 
 app.get('/*', function(req, res){
 	res.sendFile(__dirname + req.path);
