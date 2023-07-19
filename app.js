@@ -32,8 +32,7 @@ server.listen(PORT);
 const GOOGLE_CLIENT_ID="616776538800-qn2ergke0mq311tjkmkmf11149h6vbbn.apps.googleusercontent.com";
 const GOOGLE_CLIENT_SECRET = "xx";
 const oauthclient = new OAuth2Client(GOOGLE_CLIENT_ID);
-//const SUPERADMIN = "thecodecentre@gmail.com";
-const SUPERADMIN = "103301973641709867567"; //google id for thecodecentre@gmail.com
+const SUPERADMIN = process.env.SUPERADMIN_ID; //google id for the superadmin (TCC gmail)
 var AUTHUSERS = new Object(); // keep list of authenticated users by their socket ids
 var SUPERUSERS = new Object(); // keep list of authenticated super users by their socket ids
 //const QFile = "";
@@ -463,13 +462,16 @@ socket.on('selfPlayNextQuestionRequest',function(contestant) {
 
 // Get the pre-loaded quizes in case user does not want to create their own
 // Used the qmid of the super admin (code centre)
-socket.on('getPopularQuizesRequest',function() {
-  dbt.getGames(SUPERADMIN,function(games) {
-    if(games.length > 0) {
-      socket.emit('getPopularQuizesResponse',games);
-    }
+  socket.on('getPopularQuizesRequest',function() {
+    dbt.getGames(SUPERADMIN,function(games) {
+      if(games.length > 0) {
+        socket.emit('getPopularQuizesResponse',games);
+      }
+      else {
+        socket.emit('errorResponse',"No popular games");
+      }
+    });
   });
-});
 
 // used by contestant to join game so no login/auth required
 // if previously joined then there will be a token saved in a cookie

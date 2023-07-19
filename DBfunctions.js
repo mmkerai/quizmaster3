@@ -1,6 +1,6 @@
 // This file contains all Mongo DB Functions
 require('dotenv').config();
-const {MongoClient} = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const Questions = "QMQuestion";
 const Apps = "QMApp";
 const Qmasters = "QMaster";
@@ -11,71 +11,82 @@ var CollApps = 0;
 var CollQuestions = 0;
 var CollQmasters = 0;
 var CollGames = 0;
-const client = new MongoClient(URI,{useNewUrlParser: true,useUnifiedTopology: true});
+const client = new MongoClient(URI,{
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
-initialiseMongoDB = function() {
-  console.log("Connecting to: "+DBNAME+" and URI: "+URI);
-  client.connect(err => {
-    if(err)
-      console.log("MongoDB: "+err);
-    else {
-      console.log("MongoDB connected");
-      CollApps = client.db(DBNAME).collection(Apps);
-      CollQuestions = client.db(DBNAME).collection(Questions);
-      CollQmasters = client.db(DBNAME).collection(Qmasters);
-      CollGames = client.db(DBNAME).collection(CollQMGame);
-
-      // listDatabases(client);
+const initialiseMongoDB = function() {
+  async function run() {
+    try {
+      await client.connect();
+      await client.db(DBNAME).command({ ping: 1 });
+      console.log("Successfully connected to MDB");
+      CollApps = await client.db(DBNAME).collection(Apps);
+      CollQuestions = await client.db(DBNAME).collection(Questions);
+      CollQmasters = await client.db(DBNAME).collection(Qmasters);
+      CollGames = await client.db(DBNAME).collection(CollQMGame);
+      listDatabases(client);
+    } finally { // This will close the client when you finish/error
+      // console.log("Closing MDB");
+      // await client.close();
     }
-  });
+  }
+  run().catch(console.dir);
 }
 
-function listDatabases(client){
-  client.db(DBNAME).listCollections().toArray(function(err, names) {
-    if(!err)
-    console.log(names);
-  });
-};
-
-const createApp = function(appobj,socket) {
-  CollApps.insertOne(appobj, function(err, res) {
-    if (err) throw err;
-    console.log("Inserted into collection Apps:" +res);
-    socket.emit('infoResponse',"App created: "+appobj.appname);
-  });
+async function listDatabases(client) {
+  const collections = client.db(DBNAME).listCollections();
+  // const names = await collections.toArray();
+  // console.log(names);
+  for await (const doc of collections) {
+    console.log("Collections: "+doc.name);
+  }
 }
 
-const newQMaster = function(qmobj,callback) {
-  CollQmasters.insertOne(qmobj, function(err, res) {
-    if (err) throw err;
+const createApp = async function(appobj,socket) {
+  const res = await CollApps.insertOne(appobj);
+  console.log("Inserted into collection Apps:" +res);
+  socket.emit('infoResponse',"App created: "+appobj.appname);
+}
+
+const newQMaster = async function(qmobj,callback) {
+  try {
+    const res = await CollQmasters.insertOne(qmobj);
     console.log("Inserted into collection Qmaster:" +res);
     callback(true);
-  });
+  } catch(err) {
+    console.log(err);
+  }
 }
 
-// check if the QMaster exist based on his id.
-const checkQMaster = function(uid,callback) {
-  CollQmasters.find({qmid: uid}).toArray(function(err,result) {
-    if (err) throw err;
-//    console.log("Check QMaster: "+result);
-    if(typeof result != "undefined" && result.length > 0)
-      callback(true);
-    else
-      callback(false);
-  });
+// check if the QMaster exist based on his id when trying to login.
+const checkQMaster = async function(uid,callback) {
+  // console.log("Check QMaster: "+uid);
+  const result = CollQmasters.find({qmid:uid});
+  const allValues = await result.toArray();
+  if(typeof allValues != "undefined" && allValues.length > 0)
+    callback(true);
+  else
+    callback(false);
 }
 
 // Insert a new question (document) in the questions collection
-const insertQuestion = function(qobj) {
-  CollQuestions.insertOne(qobj, function(err, res) {
-    if (err) throw err;
+const insertQuestion = async function(qobj) {
+  try {
+    const res = await CollQuestions.insertOne(qobj);
 //    console.log("1 question inserted:" +res.insertedId);
-  });
+  } catch(err) {
+    console.log(err);
+  }
 }
 
 // update a question (document) with same qid
-const updateQuestion = function(qobj,callback) {
-  CollQuestions.updateOne(
+const updateQuestion = async function(qobj,callback) {
+  const res = await CollQuestions.updateOne(
     {qid: Number(qobj.qid)}, 
     {$set: {
         "category" : qobj.category,
@@ -86,149 +97,129 @@ const updateQuestion = function(qobj,callback) {
         "difficulty" : qobj.difficulty,
         "answer" : qobj.answer
       }
-    },
-    function(err, res) {
-      if (err) throw err;
+  });
 //      console.log("Update question response: " +JSON.stringify(res));
-      if(res.modifiedCount == 1) {
-        callback(true);
-      }
-      else
-        callback(false);
-    });
+  if(res.modifiedCount == 1) {
+    callback(true);
+  }
+  else
+    callback(false);
 }
 
 // Gets total number of questions
-const getNumQuestions = function(callback) {
-  CollQuestions.countDocuments({},function(err,result) {
-		if (err) throw err;
-    callback(result);
-  });
+const getNumQuestions = async function(callback) {
+  const res = await CollQuestions.countDocuments({});
+  callback(res);
 }
 
 // Gets number of question per category
 // Not sure why it is needed
-const getNumQuestionsByCat = function(cat,socket) {
-  CollQuestions.countDocuments({category: cat},function(err,result) {
-		if (err) throw err;
-    socket.emit('infoResponse',result);
-  });
+const getNumQuestionsByCat = async function(cat,socket) {
+  const res = await CollQuestions.countDocuments({category: cat});
+  socket.emit('infoResponse',res);
 }
 
 // Clear the questions collection
 // Used to load fresh questions - at start only
-const clearAllQuestions = function() {
-  CollQuestions.deleteMany({},function(err,result) {
-		if (err) throw err;
-    console.log("Collection QMQuestion Deleted OK");
-    });
+const clearAllQuestions = async function() {
+  await CollQuestions.deleteMany({});
+  console.log("Collection QMQuestion Deleted OK");
 }
 
 // Gets quizmaster object based on his name
-const getQMByName = function(qname,callback) {
-  CollQmasters.find({"qmname": qname}).toArray(function(err,result) {
-    if(err) console.log("QM not found: "+qname);
-    if(typeof result != "undefined" && result.length > 0) {
-      console.log("QMaster found OK: "+result[0].qmname);
-      callback(result[0]);
-    }
-  });
+const getQMByName = async function(qname,callback) {
+  const names = CollQmasters.find({"qmname": qname});
+  const result = await names.toArray();
+  if(typeof result != "undefined" && result.length > 0) {
+    console.log("QMaster found OK: "+result[0].qmname);
+    callback(result[0]);
+  }
 }
 
-const getQuestionsByCat = function(cat,callback) {
+const getQuestionsByCat = async function(cat,callback) {
 //  console.log("Getting question for "+cat);
-  CollQuestions.find({category:cat}).toArray(function(err,result) {
-    if (err) console.log("No questions for: "+cat); 
-    callback(result);
-  });
+  const questions = CollQuestions.find({category:cat});
+  const result = await questions.toArray();
+  callback(result);
 }
   
-const getQuestionsByCatandSubcat = function(cat,subcat,callback) {
+const getQuestionsByCatandSubcat = async function(cat,subcat,callback) {
 //  console.log("Getting question for "+cat+":"+subcat);
-  CollQuestions.find({category:cat,subcategory:subcat}).toArray(function(err,result) {
-		if (err) console.log("No questions for: "+cat+" & "+subcat); 
-    callback(result);
-  });
+  const questions = CollQuestions.find({category:cat,subcategory:subcat});
+  const result = await questions.toArray();
+  callback(result);
 }
 
-const getQuestionById = function(id,callback) {
-  console.log("Getting question id "+id);
-  CollQuestions.find({qid:Number(id)}).toArray(function(err,result) {
-    if (err) console.log("No question with id: "+id);
-    // console.log("q "+id+" details: "+result);
-    callback(result);
-  });
+const getQuestionById = async function(id,callback) {
+  // console.log("Getting question id "+id);
+  const questions = CollQuestions.findOne({qid:Number(id)});
+  const result = await questions.toArray();
+  // console.log("q "+id+" details: "+result);
+  callback(result);
 }
 
-const getGames = function(id,callback) {
+const getGames = async function(id,callback) {
 //  console.log("Getting Games for: "+id);
-  CollGames.find({qmid:id}).toArray(function(err,result) {
-    if (err) {
-      console.log("No games for QM id: "+id);
-      throw(err);
-    }
-     // console.log("q "+id+" details: "+result);
-    callback(result);
-  });
+  const games = CollGames.find({qmid:id});
+  const result = await games.toArray();
+  callback(result);
 }
 
 // Check if game exists in games collection
-const gameExists = function(game,callback) {
-  CollGames.findOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
-    if (err) throw err;
-//    console.log("Res: "+ JSON.stringify(res));
-    if(res)
+const gameExists = async function(game,callback) {
+  const games = await CollGames.findOne({qmid:game.qmid,gamename:game.gamename});
+//    console.log("Games: "+ JSON.stringify(games));
+    if(games)
       callback(true);
     else
       callback(false);
-  });
 }
 
 // Insert a new game in the games collection
-const createNewGame = function(game,callback) {
+const createNewGame = async function(game,callback) {
   game.accesscode = generateAccesscode();
-  CollGames.insertOne(game, function(err, res) {
-    if (err) throw err;
+  try {
+    const res = await CollGames.insertOne(game);
     if(res)
       callback(true);
     else
       callback(false);
-  });
+  } catch(err) {
+    console.error(err);
+  }
 }
 
 // Update a game in the games collection
-const updateGame = function(game,callback) {
+const updateGame = async function(game,callback) {
   let obj = new Object();
   obj.$set = game;
   // object should end up like {$set: {qmid: 123xxx, gamename: xxxx, etc}}
-  CollGames.updateOne({qmid:game.qmid,gamename:game.gamename}, obj, function(err, res) {
-    if (err) throw err;
+  try {
+    const res = await CollGames.updateOne({qmid:game.qmid,gamename:game.gamename}, obj);
     if(res)
       callback(true);
     else
       callback(false);
-  });
+  } catch(err) {
+    console.error(err);
+  }
 }
 
 // Delete a game in the games collection
-const deleteGame = function(game,callback) {
-  CollGames.deleteOne({qmid:game.qmid,gamename:game.gamename}, function(err, res) {
+const deleteGame = async function(game,callback) {
+  const res = await CollGames.deleteOne({qmid:game.qmid,gamename:game.gamename});
 //    console.log("Res: "+ JSON.stringify(res));
-    if (err) throw err;
-    callback(true);
-  });
+  callback(true);
 }
 
 // get game details from DB to start or edit the game
-const getGameByName = function(id,name,callback) {
-  CollGames.find({qmid:id,gamename:name}).toArray(function(err, results) {
-    if (err) throw err;
-    callback(results[0]);
-  });
+const getGameByName = async function(id,name,callback) {
+  const results = await CollGames.find({qmid:id,gamename:name});
+  callback(results[0]);
 }
 
 // get game details from DB to start or edit the game
-const getQuestionsByID = function(qlist,callback) {
+const getQuestionsByID = async function(qlist,callback) {
   var arr = [];
   qlist.forEach(function (id,index) {
     let obj = new Object();
@@ -239,20 +230,16 @@ const getQuestionsByID = function(qlist,callback) {
   qobj.$or = arr;
  // the query should end up like: {$or:[{qid:2179},{qid:2181},]},{_id:false}
 // console.log("Query str: "+JSON.stringify(qobj));
-  CollQuestions.find(qobj,{_id:false}).toArray(function(err,results) {
-    if (err) throw err;
-    callback(results);
-  });
+  const questions =  CollQuestions.find(qobj,{_id:false});
+  const results = await questions.toArray();
+  callback(results);
 }
 
 // get game from access code. used for selfplay
-const getGameFromAccesscode = function(qmid,ac,callback) {
-  CollGames.findOne({qmid:qmid,accesscode:ac}, function(err, res) {
-    if (err) throw err;
+const getGameFromAccesscode = async function(qmid,ac,callback) {
+  const res = await CollGames.findOne({qmid:qmid,accesscode:ac});
 //    console.log("Game: "+ JSON.stringify(res));
-      callback(res);
-
-  });
+  callback(res);
 }
 
 // creates a random game access code for contestants to enter the game
