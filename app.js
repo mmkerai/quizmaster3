@@ -549,7 +549,7 @@ socket.on('playSelfRequest',function(contestant) {
         console.log(contestant.userid+" Joining game "+sgame.gamename);
         socket.join(sgame.gameid);
         socket.emit("joinGameResponse",contestant); // confirm back to contestant
-//        socket.emit('playSelfResponse',sgame);
+        // socket.emit('playSelfResponse',sgame);
         preQuestion(sgame);
       });
   });

@@ -20,7 +20,7 @@ $(document).ready(function() {
 });
 
 function doJoin() {
-	let contestant = new Object();
+	var contestant = new Object();
 	// contestant = JSON.parse(readCookie("quizmaster"));
 	// if(contestant)
 	// 	socket.emit('joinGameRequest',contestant);
@@ -35,7 +35,7 @@ function playself(gamename) {
 		return;
 	}
 	else {
-		let contestant = new Object();
+		var contestant = new Object();
 		contestant.userid = cname;
 		contestant.gamename = gamename;
 		socket.emit('playSelfRequest',contestant);	// contestant joining
@@ -44,7 +44,7 @@ function playself(gamename) {
 
 function joinquiz() {
 	clearMessages();
-	let contestant = new Object();
+	var contestant = new Object();
 	contestant.userid = $('#cname').val();
 	contestant.accesscode = $('#cacode').val();
 	socket.emit('joinGameRequest',contestant);

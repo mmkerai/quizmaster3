@@ -174,7 +174,7 @@ QMQ.prototype.gameReady = function(qmid,gname,callback) {
     // this gets question objects based on question ids
     Dbt.getQuestionsByID(game.questions,function(qs) {
       let newg = new QMGame(game);
-//      console.log("active game: "+JSON.stringify(newg));
+      // console.log("active game: "+JSON.stringify(newg));
       newg.questions = qs;  //replace question ids with full details of the questions
       // build list of accesscodes so its quicker to join later
       ActiveGameByName[game.gamename] = newg;    // add game to the list

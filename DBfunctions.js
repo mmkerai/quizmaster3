@@ -29,7 +29,7 @@ const initialiseMongoDB = function() {
       CollQuestions = await client.db(DBNAME).collection(Questions);
       CollQmasters = await client.db(DBNAME).collection(Qmasters);
       CollGames = await client.db(DBNAME).collection(CollQMGame);
-      listDatabases(client);
+      // listDatabases(client);
     } finally { // This will close the client when you finish/error
       // console.log("Closing MDB");
       // await client.close();
@@ -214,8 +214,10 @@ const deleteGame = async function(game,callback) {
 
 // get game details from DB to start or edit the game
 const getGameByName = async function(id,name,callback) {
-  const results = await CollGames.find({qmid:id,gamename:name});
-  callback(results[0]);
+  const game = CollGames.find({qmid:id,gamename:name});
+  const result = await game.toArray();
+  // console.log(JSON.stringify(result));
+  callback(result[0]);
 }
 
 // get game details from DB to start or edit the game
