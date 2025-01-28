@@ -7,7 +7,8 @@ var socket = io('', {
 
 var $table;
 
-const version = "QM v0.97";
+const version = "QM v0.98";
+var GOOGLE_CLIENT_ID = document.querySelector('meta[name="google-signin-client_id"]').content;
 var auth2; // The Sign-In object.
 var googleUser; // The current user.
 var countdownsound = new Audio('audio/countdown.mp3');
@@ -19,30 +20,44 @@ var newcontestantsound = new Audio('audio/smsalert3.mp3');
 /**
  * Calls startAuth after Sign in V2 finishes setting up.
  */
-// var appStart = function() {
-// 	gapi.load('auth2', initSigninV2);
-//   };
-  
+function init() {
+	gapi.load('auth2',function() {
+		auth2 = gapi.auth2.init({
+			client_id: GOOGLE_CLIENT_ID,
+			scope: 'profile'
+		});
+		auth2.attachClickHandler('signinbutton', {}, onSignIn, onFailure);
+	});
+	console.log('User check.');
+};
+
+/**
+ * Handle successful sign-ins.
+ */
+var onSuccess = function(user) {
+    console.log('Signed in as ' + user.getBasicProfile().getName());
+ };
+
+/**
+ * Handle sign-in failures.
+ */
+var onFailure = function(error) {
+    console.log(error);
+};
 /**
  * Initializes Signin v2 and sets up listeners.
  */
-// var initSigninV2 = function() {
-// 	auth2 = gapi.auth2.init({
-// 		client_id: GOOGLE_CLIENT_ID,
-// 		scope: 'profile'
-// 	});
+	// Listen for sign-in state changes.
+	// auth2.isSignedIn.listen(signinChanged);
 
-// 	// Listen for sign-in state changes.
-// 	auth2.isSignedIn.listen(signinChanged);
+	// Listen for changes to current user.
+	// auth2.currentUser.listen(userChanged);  
 
-// 	// Listen for changes to current user.
-// 	auth2.currentUser.listen(userChanged);  
-
-// 	// Sign in the user if they are currently signed in.
-// 	if (auth2.isSignedIn.get() == true) {
-// 		auth2.signIn();
-// 	}
-
+	// Sign in the user if they are currently signed in.
+// if(auth2.isSignedIn.get() == true) {
+// 	auth2.signIn();
+// 	console.log('User signed in.');
+// };
 // 	// Start with the current live values.
 // 	refreshValues();
 // }
@@ -100,6 +115,14 @@ var newcontestantsound = new Audio('audio/smsalert3.mp3');
 // 		updateGoogleUser();
 // 	}
 // }
+
+function isSignedIn() {
+	var auth2 = gapi.auth2.getAuthInstance();
+	if (auth2.isSignedIn.get() == true) {
+		auth2.signIn();
+		console.log('User signed in.');
+	}
+}
 
 function onRegister(googleUser) {
 	var profile = googleUser.getBasicProfile();
@@ -161,6 +184,7 @@ socket.on('loginResponse', function(userinfo) {
 		$('#username').text(userinfo.name);
 		$('#userimg').attr("src",userinfo.imageUrl);
 		$('#signinbutton').hide();
+		$('#signupbutton').hide();
 		$('#signoutbutton').show();
 		$('#username').show();
 		$('#userimg').show();
@@ -390,7 +414,7 @@ socket.on('getPopularQuizesResponse',function(quizes) {
  
 //	console.log("mobile is "+maxcol);
 	$('#play').hide();
-//	$('#popular').show();
+	$('#popular').show();
 	var newrow;
 	quizes.forEach(quiz => {
 		pnum++;

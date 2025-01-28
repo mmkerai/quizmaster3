@@ -97,7 +97,7 @@ function myselect() {
 }
 
 socket.on('getGamesResponse',function(glist) {
-//	console.log(glist);
+	// console.log(glist);
   	$('#gamestable').bootstrapTable({data: glist});
 	$('#gamestable').bootstrapTable('load', glist);
 });

@@ -159,7 +159,7 @@ const getQuestionById = async function(id,callback) {
 }
 
 const getGames = async function(id,callback) {
-//  console.log("Getting Games for: "+id);
+//  console.log("Getting Games from DB: "+id);
   const games = CollGames.find({qmid:id});
   const result = await games.toArray();
   callback(result);

@@ -15,7 +15,7 @@ $(document).ready(function() {
 	$('#ansform').submit(function(event) {
 		event.preventDefault();
 	});
-
+	// isSignedIn();
 	socket.emit("getPopularQuizesRequest","");
 });
 
@@ -25,7 +25,8 @@ function doJoin() {
 	// if(contestant)
 	// 	socket.emit('joinGameRequest',contestant);
 	// else
-		$('#joingamex').show();
+	$('#joingamex').show();
+	$('#popular').hide();
 }
 
 // when user wants to play game by themselves (not via quizmaster)
@@ -184,6 +185,10 @@ function mcanswer(value) {
 function setDefaultValues() {
 	$('#version').text(version);
 	$('#username').hide();
+	$('#userimg').hide();
+	$('#signinbutton').show();
+	$('#signupbutton').show();
+	$('#signoutbutton').hide();
 	$('#game').hide();
 	$('#play').hide();
 	$('#gamecontrol').hide();

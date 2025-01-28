@@ -2,6 +2,7 @@
 .customb {
     width: 100px !important;
 }
+
 /* The countdown - hidden by default */
 .countdown {
   	position: fixed;
@@ -106,13 +107,13 @@
 } 
 
 .popquiz div.gameitem {
-	width: 192px;
-	height: 340px
+	width: 180px;
+	height: 330px
 }
 
 .popquiz .gicon {
-	width: 100%;
-	height: 57%;
+	width: 90%;
+	height: 50%;
 	border-width: 1px; 
 	border-color: grey; 
 	border-style: solid
@@ -124,12 +125,12 @@
 	color: blue;
 	font-family: Arial,Helvetica,sans-serif;
 	font-style: bold;
-	font-size: 1.5em
+	font-size: 1.4em
 }
 
 .popquiz .gamedesc {
 	width: 100%;
-	height: 25%;
+	height: 24%;
 	color: black;
 	font-family: Arial,Helvetica,sans-serif;
 	font-style: bold;
