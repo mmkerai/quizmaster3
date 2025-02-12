@@ -173,10 +173,11 @@ window.operateEvents = {
 		var tab,id;
 		var flag = true;
 		var navtabs = document.getElementsByClassName("nav-link");
-		navtabs.forEach(function(value,index) {
+		$.each(navtabs, function(index,value) {
+					// navtabs.forEach(function(value,index) {
 			id = navtabs[index].getAttribute("id");
-			tab = navtabs[index].getAttribute("href");
-//			console.log("NavTab: "+tab);
+			tab = navtabs[index].getAttribute("data-bs-target");
+			console.log("NavTab: "+tab);
 			if(tab.includes("play")) {	
 				flag = false;
 				alert(id+" already in play");

@@ -461,13 +461,15 @@ socket.on('getPopularQuizesResponse',function(quizes) {
 function createNewNavTab(label,id,link) {
 	var node = document.createElement("LI");	// Create a <li> node
     node.setAttribute("class","nav-item");
-	var anc = document.createElement("a");	// Create a <a> node
+	node.setAttribute("role","presentation");
+	var anc = document.createElement("button");	// Create a <button> node
 	anc.innerText = label;
     anc.setAttribute("class","nav-link");
     anc.setAttribute("id",id);
-    anc.setAttribute("data-toggle","tab");
-    anc.setAttribute("href",link);
+    anc.setAttribute("data-bs-toggle","tab");
+    anc.setAttribute("data-bs-target",link);
     anc.setAttribute("role","tab");
+	anc.setAttribute("type","button");
 	node.appendChild(anc);
 	document.getElementById("mynavtabs").appendChild(node);
 }

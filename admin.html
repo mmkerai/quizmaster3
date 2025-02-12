@@ -6,12 +6,12 @@
 	<meta name="google-signin-client_id" content="616776538800-qn2ergke0mq311tjkmkmf11149h6vbbn.apps.googleusercontent.com">
 	<title>Quizmaster Admin</title>
 	<link rel="icon" href="images/order.ico">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" rel="stylesheet">
-	<link href="https://unpkg.com/bootstrap-table@1.24.0/dist/bootstrap-table.min.css" rel="stylesheet">
-	<script src="https://unpkg.com/bootstrap-table@1.24.0/dist/bootstrap-table.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.0/dist/bootstrap-table.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.24.0/dist/bootstrap-table.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js" integrity="sha256-R4pqcOYV8lt7snxMQO/HSbVCFRPMdrhAFMH+vr9giYI=" crossorigin="anonymous"></script>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css" />
 	<script src="https://apis.google.com/js/platform.js" async defer></script>
@@ -37,122 +37,120 @@
 		</div>
 	</div>
 	<p class="messages" id="error"></p>
-		<div id="adminmsg">
-			<p class="messages2">Sign in to start quizzing</p>
-			<div id='menu' class="button-group">
-				<button id="signinbutton" class="g-signin2" data-longtitle="true" data-size="large" data-onsuccess="onSignIn" data-theme="dark"></button>
-				<!-- <p></p><p class="messages2">or register here</p> -->
-				<!-- <button id="registerbutton" class="g-signin2" data-longtitle="false" data-size="small" data-onsuccess="onRegister" data-theme="light"></button> -->
+	<div id="adminmsg">
+		<p class="messages2">Sign in to start quizzing</p>
+		<div id='menu' class="button-group">
+			<button id="signinbutton" class="g-signin2" data-longtitle="true" data-size="large" data-onsuccess="onSignIn" data-theme="dark"></button>
+		</div>
+	</div>
+	<ul id="mynavtabs" class="nav nav-tabs" role="tablist">
+		<li class="nav-item" role="presentation">
+			<button class="nav-link active" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" role="tab" type="button" >Admin</button>
+		</li>
+	</ul>
+	<div class="tab-content" id="myTabContent">
+		<div class="tab-pane fade show active" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+			<p>&nbsp;</p>
+			<p class="messages2" id="yourgames">Your Quizes&nbsp;
+				<button class="btn btn-info btn-sm" id="newgame" onclick="newgame()">+ New</button>
+			</p>
+			<div id="gtable">
+				<table id="gamestable"
+					class="table table-striped"
+					data-side-pagination="server">
+					<thead class="thead-light">
+					<tr>
+						<th data-field="gamename">Game Name</th>
+						<th data-field="gametype">Game Type</th>
+						<th data-field="accesscode">Access Code</th>
+						<th data-field="questions">Question IDs</th>
+						<th data-field="timelimit">Time Limit</th>
+						<th data-field="operate" data-width="150" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
+					</tr>
+					</thead>
+				</table>
 			</div>
 		</div>
-		<ul id="mynavtabs" class="nav nav-tabs">
-			<li class="nav-item">
-			  <a class="nav-link active" id="admin-tab" data-toggle="tab" href="#admin" role="tab">Admin</a>
-			</li>
-		</ul>
-		<div class="tab-content" id="myTabContent">
-			<div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
-				<p>&nbsp;</p>
-				<p class="messages2" id="yourgames">Your Quizes&nbsp;
-					<button class="btn btn-info btn-sm" id="newgame" onclick="newgame()">+ New</button>
-				<div id="gtable">
-					<table id="gamestable"
-						class="table table-striped"
-						data-toggle="gamestable"
-						data-side-pagination="server">
-						<thead class="thead-light">
-						<tr>
-							<th data-field="gamename">Game Name</th>
-							<th data-field="gametype">Game Type</th>
-							<th data-field="accesscode">Access Code</th>
-							<th data-field="questions">Question IDs</th>
-							<th data-field="timelimit">Time Limit</th>
-							<th data-field="operate" data-width="150" data-events="operateEvents" data-formatter="actionFormatter">Action</th>
-						</tr>
-						</thead>
-					</table>
-				</div>
-			</div>
-			<div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
-				<div class="form-horizontal col-xs-9 col-xs-offset-1">
-					<p class="messages" id="setupgameerror"></p>
-					<div class="form-group">
-						<label class="control-label col-xs-3">Game or event name</label>
-						<div class="col-xs-3">
-							<input class="form-control" type="text" id="qmgname"/>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-3">Game type</label>
-						<div class="col-xs-3">
-							<select class="form-control" id="qmgtype"></select>
-						</div>
-						<label class="control-label col-xs-3">Time per question (s)</label>
-						<div class="col-xs-3">
-							<input class="form-control" type="text" id="qmgtime" value="20"/>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-3">Game Description</label>
-						<div class="col-xs-9">
-							<input class="form-control" type="text" id="qmgdesc" value=""/>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="control-label col-xs-3">List of question ids</label>
-						<div class="col-xs-7">
-							<input class="form-control" type="text" id="qmgquestions"/>
-						</div>
-						<div class="col-xs-2">
-							<button class="btn btn-info" onClick="chooseq()">Choose Questions</button>
-						</div>
-					</div>
-				</div>
-				<div id="myqtable"></div>
-				<p>&nbsp;</p>
+		<div class="tab-pane fade" id="setup" role="tabpanel" aria-labelledby="setup-tab">
+			<div class="form-horizontal col-md-9 col-md-offset-1">
+				<p class="messages" id="setupgameerror"></p>
 				<div class="form-group">
-					<div class="col-xs-6 col-xs-offset-3">
-						<button class="btn btn-success" onClick="setupGame()">Setup Game</button>
-						<button class="btn btn-warning" onClick="cancelSetup()">Cancel</button>
+					<label class="control-label col-md-3">Game or event name</label>
+					<div class="col-md-3">
+						<input class="form-control" type="text" id="qmgname"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-3">Game type</label>
+					<div class="col-md-3">
+						<select class="form-control" id="qmgtype"></select>
+					</div>
+					<label class="control-label col-md-3">Time per question (s)</label>
+					<div class="col-md-3">
+						<input class="form-control" type="text" id="qmgtime" value="20"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-3">Game Description</label>
+					<div class="col-md-9">
+						<input class="form-control" type="text" id="qmgdesc" value=""/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-3">List of question ids</label>
+					<div class="col-md-7">
+						<input class="form-control" type="text" id="qmgquestions"/>
+					</div>
+					<div class="col-md-2">
+						<button class="btn btn-info" onClick="chooseq()">Choose Questions</button>
 					</div>
 				</div>
 			</div>
-			<div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="q-tab">
-				<br/><p class="qm-info">Current list of questions: <span class="messages" id="qlist"></span></p>
-				<!-- <br/><p class="qm-info">Current list of questions:</p>
-				<div id="selectqtable"></div> -->
-				<div class="form-group">
-					<select id="qcat"></select>
-					<button class="btn btn-info" onClick='getqs()'>Get Questions</button>
-					<button class="btn btn-warning" onClick='myselect()'>Add selected to quiz</button>
-					<button class="btn btn-primary" onClick='cancelQSelect()'>Done</button>
+			<div id="myqtable"></div>
+			<p>&nbsp;</p>
+			<div class="form-group">
+				<div class="col-md-6 col-md-offset-3">
+					<button class="btn btn-success" onClick="setupGame()">Setup Game</button>
+					<button class="btn btn-warning" onClick="cancelSetup()">Cancel</button>
 				</div>
-				<div id="qtable">
-					<table id="btable"
-						class="table table-striped"
-						data-toggle="btable"
-						data-height="512"
-						data-search="true"
-						data-pagination="true"
-						data-page-list="[10, 20, 30]"
-						data-click-to-select="true">
-						<thead class="thead-light">
-						<tr>
-							<th data-field="state" data-checkbox="true"></th>
-							<th data-field="qid">ID</th>
-							<th data-field="category" data-sortable="true">Category</th>
-							<th data-field="subcategory" data-sortable="true">Subcategory</th>
-							<th data-field="difficulty" data-sortable="true">Difficulty</th>
-							<th data-field="type" data-sortable="true">Type</th>
-							<th data-field="question">Question</th>
-							<th data-field="answer">Answer</th>
-							<th data-field="imageurl" data-width="132" data-events="questionEvents" data-formatter="questionFormatter">Image</th>
-						</tr>
-						</thead>
-					</table>
-				</div>
+			</div>
+		</div>
+		<div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="q-tab">
+			<br/><p class="qm-info">Current list of questions: <span class="messages" id="qlist"></span></p>
+			<!-- <br/><p class="qm-info">Current list of questions:</p>
+			<div id="selectqtable"></div> -->
+			<div class="form-group">
+				<select id="qcat"></select>
+				<button class="btn btn-info" onClick='getqs()'>Get Questions</button>
+				<button class="btn btn-warning" onClick='myselect()'>Add selected to quiz</button>
+				<button class="btn btn-primary" onClick='cancelQSelect()'>Done</button>
+			</div>
+			<div id="qtable">
+				<table id="btable"
+					class="table table-striped"
+					data-toggle="btable"
+					data-height="512"
+					data-search="true"
+					data-pagination="true"
+					data-page-list="[10, 20, 30]"
+					data-click-to-select="true">
+					<thead class="thead-light">
+					<tr>
+						<th data-field="state" data-checkbox="true"></th>
+						<th data-field="qid">ID</th>
+						<th data-field="category" data-sortable="true">Category</th>
+						<th data-field="subcategory" data-sortable="true">Subcategory</th>
+						<th data-field="difficulty" data-sortable="true">Difficulty</th>
+						<th data-field="type" data-sortable="true">Type</th>
+						<th data-field="question">Question</th>
+						<th data-field="answer">Answer</th>
+						<th data-field="imageurl" data-width="132" data-events="questionEvents" data-formatter="questionFormatter">Image</th>
+					</tr>
+					</thead>
+				</table>
 			</div>
 		</div>
 	</div>
+</div>
 </body>
 </html>
